@@ -115,32 +115,36 @@ The AI analyzer evaluates **5 independent risk factors** with weighted scoring:
 
 ```
 aegis-protocol/
-├── contracts/                      # Solidity smart contracts
-│   ├── AegisRegistry.sol           # ERC-721 agent identity & reputation
-│   ├── AegisVault.sol              # Non-custodial vault & protection
-│   └── DecisionLogger.sol          # On-chain decision audit log
-├── test/                           # Comprehensive test suites
-│   ├── AegisRegistry.test.ts       # 20 tests
-│   ├── AegisVault.test.ts          # 20 tests
-│   └── DecisionLogger.test.ts      # 14 tests
+├── contracts/                      # Solidity smart contracts (1,326 LOC)
+│   ├── AegisRegistry.sol           # ERC-721 agent identity & reputation (415 LOC)
+│   ├── AegisVault.sol              # Non-custodial vault & protection (573 LOC)
+│   └── DecisionLogger.sol          # On-chain decision audit log (338 LOC)
+├── test/                           # Comprehensive test suites (54 tests)
+│   ├── AegisRegistry.test.ts       # 20 tests — registration, tiers, reputation
+│   ├── AegisVault.test.ts          # 20 tests — deposits, withdrawals, protection
+│   └── DecisionLogger.test.ts      # 14 tests — logging, snapshots, stats
 ├── scripts/
-│   └── deploy.ts                   # Multi-contract deployment script
+│   ├── deploy.ts                   # Multi-contract deployment script
+│   └── demo-e2e.ts                 # 🔥 Full 10-phase on-chain E2E demo
 ├── agent/                          # AI Guardian Agent
 │   └── src/
 │       ├── index.ts                # Main agent loop (Observe→Analyze→Decide→Execute)
 │       ├── analyzer.ts             # AI risk analysis engine (5-vector scoring)
-│       ├── monitor.ts              # Position & market data monitor
+│       ├── monitor.ts              # Position & market data monitor (live+fallback)
+│       ├── market-provider.ts      # 🔥 CoinGecko + DeFiLlama live data feeds
 │       ├── executor.ts             # On-chain transaction executor
 │       └── simulate.ts             # Demo simulation (no blockchain required)
 ├── frontend/                       # Next.js 14 dashboard
 │   └── src/
 │       ├── app/
-│       │   ├── page.tsx            # Main dashboard with tabs & stats
+│       │   ├── page.tsx            # 🔥 Dashboard with live contract integration
 │       │   ├── layout.tsx          # Dark theme layout
 │       │   └── globals.css         # Cyberpunk glassmorphism theme
 │       └── lib/
 │           ├── constants.ts        # Contract addresses & chain config
-│           └── useWallet.ts        # MetaMask wallet hook
+│           ├── useWallet.ts        # MetaMask wallet hook
+│           ├── useContracts.ts     # 🔥 Contract read/write hooks
+│           └── abis.ts            # 🔥 Full contract ABIs
 ├── hardhat.config.ts               # Multi-network configuration
 └── README.md                       # This file
 ```
@@ -169,7 +173,52 @@ npm install --legacy-peer-deps
 npx hardhat test
 ```
 
-### 3. Run AI Agent Simulation
+### 3. Run End-to-End Demo (On-Chain Proof)
+
+This runs a full 10-phase lifecycle demo on a local Hardhat network, demonstrating the complete guardian flow **entirely on-chain**:
+
+```bash
+npx hardhat run scripts/demo-e2e.ts
+```
+
+**What the demo proves:**
+
+| Phase | Action | Verified On-Chain |
+|-------|--------|-------------------|
+| 1 | Deploy 3 contracts | ✅ Contract addresses |
+| 2 | Configure cross-contract permissions | ✅ Authorization mappings |
+| 3 | Register AI agent as ERC-721 NFT | ✅ Token minted, tier set |
+| 4 | 2 users deposit 7 BNB total | ✅ Vault balances |
+| 5 | Users authorize agent + set risk profiles | ✅ Per-user settings |
+| 6 | Normal monitoring cycle → AllClear logged | ✅ Decision record |
+| 7 | Price crash → stop-loss executed (2.5 BNB saved) | ✅ Protection action |
+| 8 | Rug pull → emergency withdrawal (2.0 BNB saved) | ✅ Emergency action |
+| 9 | Users give 5-star reputation feedback | ✅ Reputation updated |
+| 10 | Full state verification | ✅ All metrics on-chain |
+
+**Demo Output (verified):**
+
+```
+  📊 Agent Performance (On-Chain):
+     Name:              Aegis Guardian Alpha
+     Total Decisions:   2
+     Successful:        2
+     Value Protected:   4.5 BNB
+     Success Rate:      100%
+     Reputation:        5/5.00
+
+  📝 Decision Log (On-Chain):
+     Total Decisions:   3
+     Threats Detected:  1
+     Protections:       1
+
+  🏦 Vault Stats (On-Chain):
+     Total Deposited:   2.5 BNB
+     Actions Executed:  2
+     Value Protected:   4.5 BNB
+```
+
+### 4. Run AI Agent Simulation
 
 No blockchain connection needed — demonstrates the full AI analysis pipeline:
 
@@ -281,6 +330,44 @@ This creates an **immutable, auditable record** of all AI agent behavior on BSC.
 
 ---
 
+## 📡 Live Data Integration
+
+The agent fetches **real market data** from free, no-key-required APIs:
+
+| Provider | Data | Usage |
+|----------|------|-------|
+| **CoinGecko** | BNB price, 24h change, 24h volume | Price volatility & volume vectors |
+| **DeFiLlama** | BSC chain TVL | Liquidity health vector |
+| **BSC RPC** | Gas price, block number | On-chain state |
+
+```typescript
+// agent/src/market-provider.ts
+const liveData = await liveProvider.fetchLiveData();
+// Returns: { price, priceChange24h, volume24h, totalLiquidity, gasPrice, blockNumber }
+```
+
+If APIs are unavailable, the agent falls back gracefully to block-seeded simulation data. Controlled via `USE_LIVE_DATA=true` env var.
+
+---
+
+## 🖥️ Frontend Integration
+
+The dashboard connects directly to deployed contracts:
+
+- **Auto-detects** if contracts are deployed (non-zero addresses)
+- **Live mode**: Reads agent info, vault stats, decisions, risk snapshots from chain
+- **Demo mode**: Falls back to mock data when contracts aren't deployed
+- **Real-time**: Auto-refreshes every 30 seconds
+- **Write operations**: Deposit BNB, authorize agents, emergency withdraw, give feedback
+
+```typescript
+// frontend/src/lib/useContracts.ts
+const { agentInfo, vaultStats, decisions, riskSnapshot, isLive } = useContractData(provider);
+const { deposit, withdraw, authorizeAgent, emergencyWithdraw } = useContractWrite(signer);
+```
+
+---
+
 ## ⛓️ Smart Contracts
 
 ### Agent Tiers (ERC-721)
@@ -320,12 +407,12 @@ struct RiskProfile {
 
 | Layer | Technology |
 |-------|-----------|
-| **Smart Contracts** | Solidity 0.8.24, OpenZeppelin, Hardhat |
+| **Smart Contracts** | Solidity 0.8.24, OpenZeppelin, Hardhat 2.22.17 |
 | **AI Agent** | TypeScript, ethers.js v6, Multi-factor analysis |
-| **Frontend** | Next.js 14, Tailwind CSS, ethers.js |
-| **Blockchain** | BNB Smart Chain (BSC Testnet/Mainnet) |
-| **Testing** | Hardhat + Chai (54 tests) |
-| **Standard** | ERC-721 / ERC-8004 compatible |
+| **Live Data Feeds** | CoinGecko API (price/volume), DeFiLlama API (TVL/liquidity) |
+| **Frontend** | Next.js 14, Tailwind CSS, ethers.js, contract hooks |
+| **Blockchain** | BNB Smart Chain (BSC Testnet/Mainnet, opBNB) |
+| **Testing** | Hardhat + Chai (54 tests) + E2E demo script |
 
 ---
 
@@ -346,10 +433,14 @@ This project was built with AI assistance as encouraged by the hackathon:
 
 1. **Competitive Analysis** — Analyzed 40+ competitor submissions to identify unique positioning
 2. **Architecture Design** — AI-assisted design of 3-contract system with autonomous agent loop
-3. **Smart Contract Development** — Solidity contracts with comprehensive test coverage (54/54)
-4. **AI Risk Engine** — Multi-factor weighted risk analysis with configurable thresholds
-5. **Frontend Design** — Cyberpunk-themed glassmorphism dashboard
-6. **Simulation System** — 5-scenario demo showing all risk levels
+3. **Smart Contract Development** — 3 Solidity contracts (1,326 LOC) with comprehensive test coverage (54/54)
+4. **AI Risk Engine** — Multi-factor weighted risk analysis with 5 vectors and configurable thresholds
+5. **Live API Integration** — CoinGecko (BNB price/volume) + DeFiLlama (BSC TVL/liquidity) with fallback
+6. **E2E Demo Script** — 10-phase on-chain demo proving full guardian lifecycle
+7. **Frontend Dashboard** — Cyberpunk-themed glassmorphism UI with live contract data hooks
+8. **Contract Integration** — Full ABI exports + React hooks for read/write contract interaction
+9. **Brutal Self-Audit** — Identified and fixed 6 critical weaknesses mid-hackathon
+10. **Simulation System** — 5-scenario demo showing all risk levels without blockchain
 
 All code was reviewed, tested, and verified. The AI agent's risk analysis uses transparent, interpretable algorithms for full auditability.
 

@@ -5,6 +5,7 @@
 
 import { ethers } from "ethers";
 import { MarketData, PositionData } from "./analyzer";
+import { LiveMarketProvider } from "./market-provider";
 
 export interface MonitorConfig {
   rpcUrl: string;
@@ -44,6 +45,8 @@ export class PositionMonitor {
   private isRunning = false;
   private watchedAddresses: Set<string> = new Set();
   private lastBlockChecked = 0;
+  private liveMarket: LiveMarketProvider;
+  private useLiveData: boolean;
 
   constructor(config: MonitorConfig) {
     this.config = config;
@@ -51,6 +54,8 @@ export class PositionMonitor {
     this.vault = new ethers.Contract(config.vaultAddress, VAULT_ABI, this.provider);
     this.registry = new ethers.Contract(config.registryAddress, REGISTRY_ABI, this.provider);
     this.logger = new ethers.Contract(config.loggerAddress, LOGGER_ABI, this.provider);
+    this.liveMarket = new LiveMarketProvider();
+    this.useLiveData = process.env.USE_LIVE_DATA !== "false"; // Default to live data
     
     console.log("[Aegis Monitor] Position monitor initialized");
     console.log(`  Vault: ${config.vaultAddress}`);
@@ -94,10 +99,20 @@ export class PositionMonitor {
   }
 
   /**
-   * Fetch simulated market data for BNB
-   * In production, this would pull from DEX APIs, oracles, etc.
+   * Fetch market data — uses LIVE APIs by default (CoinGecko + DeFiLlama)
+   * Falls back to block-seeded simulation if APIs unavailable
    */
   async getMarketData(): Promise<MarketData> {
+    // Try live data first
+    if (this.useLiveData) {
+      try {
+        return await this.liveMarket.fetchLiveData();
+      } catch (err: any) {
+        console.warn(`[Aegis Monitor] Live data failed, falling back to simulation: ${err.message}`);
+      }
+    }
+
+    // Fallback: block-seeded simulation
     try {
       const block = await this.provider.getBlock("latest");
       const blockNumber = block?.number ?? 0;

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "../lib/useWallet";
-import { RISK_LEVELS, RISK_COLORS } from "../lib/constants";
+import { useContractData, useContractWrite } from "../lib/useContracts";
+import { RISK_LEVELS, RISK_COLORS, AGENT_TIERS } from "../lib/constants";
+import toast from "react-hot-toast";
 import {
   Shield,
   Activity,
@@ -16,9 +18,12 @@ import {
   ArrowRight,
   ExternalLink,
   Github,
+  RefreshCw,
+  Lock,
+  Cpu,
 } from "lucide-react";
 
-// ─── Mock Data (simulates real-time agent data) ───────────────
+// ─── Mock Data (used when contracts not deployed) ─────────────
 const MOCK_STATS = {
   totalValueProtected: "2,847.5",
   activeAgents: 12,
@@ -43,9 +48,72 @@ const MOCK_POSITIONS = [
   { user: "0x9f2...b63", balance: "3.7 BNB", risk: 0, agent: "Guardian Alpha", lastAction: "2 hrs ago" },
 ];
 
+const DECISION_TYPES = ["Risk Assessment", "Threat Detected", "Protection Triggered", "All Clear", "Market Analysis", "Position Review"];
+
 export default function Home() {
-  const { address, isConnected, connect, disconnect, isConnecting, switchToBsc, chainId } = useWallet();
+  const { address, isConnected, connect, disconnect, isConnecting, switchToBsc, chainId, provider, signer } = useWallet();
+  const contractData = useContractData(provider);
+  const contractWrite = useContractWrite(signer);
   const [activeTab, setActiveTab] = useState<"overview" | "decisions" | "positions" | "agent">("overview");
+  const [depositAmount, setDepositAmount] = useState("");
+
+  // Fetch contract data when connected
+  useEffect(() => {
+    if (isConnected && provider) {
+      contractData.fetchAll(address ?? undefined);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, provider, address]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    if (!isConnected || !provider) return;
+    const interval = setInterval(() => {
+      contractData.fetchAll(address ?? undefined);
+    }, 30000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, provider, address]);
+
+  const handleDeposit = async () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    try {
+      toast.loading("Depositing...", { id: "deposit" });
+      await contractWrite.deposit(depositAmount);
+      toast.success(`Deposited ${depositAmount} BNB`, { id: "deposit" });
+      setDepositAmount("");
+      contractData.fetchAll(address ?? undefined);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Deposit failed";
+      toast.error(msg, { id: "deposit" });
+    }
+  };
+
+  const handleAuthorize = async () => {
+    try {
+      toast.loading("Authorizing agent...", { id: "auth" });
+      await contractWrite.authorizeAgent(0);
+      toast.success("Agent #0 authorized!", { id: "auth" });
+      contractData.fetchAll(address ?? undefined);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Authorization failed";
+      toast.error(msg, { id: "auth" });
+    }
+  };
+
+  // Merged stats: use live data if available, else mock
+  const stats = {
+    totalValueProtected: contractData.vaultStats?.totalValueProtected ?? MOCK_STATS.totalValueProtected,
+    activeAgents: contractData.agentCount || MOCK_STATS.activeAgents,
+    threatsDetected: contractData.loggerStats?.totalThreats ?? MOCK_STATS.threatsDetected,
+    protectionRate: contractData.successRate > 0 ? contractData.successRate.toFixed(1) : MOCK_STATS.protectionRate,
+    totalDecisions: contractData.loggerStats?.totalDecisions ?? MOCK_STATS.totalDecisions,
+    totalDeposited: contractData.vaultStats?.totalBnbDeposited ?? MOCK_STATS.totalDeposited,
+    actionsExecuted: contractData.vaultStats?.totalActionsExecuted ?? 47,
+  };
 
   return (
     <div className="min-h-screen">
@@ -65,11 +133,26 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}>
-            <div className="w-2 h-2 rounded-full bg-green-500 pulse-live" />
-            <span className="text-green-400 text-sm font-medium">Agent Live</span>
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ 
+            background: contractData.isLive ? "rgba(34,197,94,0.1)" : "rgba(234,179,8,0.1)", 
+            border: `1px solid ${contractData.isLive ? "rgba(34,197,94,0.2)" : "rgba(234,179,8,0.2)"}` 
+          }}>
+            <div className={`w-2 h-2 rounded-full ${contractData.isLive ? "bg-green-500" : "bg-yellow-500"} pulse-live`} />
+            <span className={`${contractData.isLive ? "text-green-400" : "text-yellow-400"} text-sm font-medium`}>
+              {contractData.isLive ? "Live On-Chain" : "Demo Mode"}
+            </span>
           </div>
-          
+
+          {isConnected && (
+            <button 
+              onClick={() => contractData.fetchAll(address ?? undefined)} 
+              className="text-gray-500 hover:text-[#00e0ff] transition-colors"
+              title="Refresh data"
+            >
+              <RefreshCw className={`w-4 h-4 ${contractData.loading ? "animate-spin" : ""}`} />
+            </button>
+          )}
+
           {isConnected ? (
             <div className="flex items-center gap-3">
               {chainId !== 97 && (
@@ -95,11 +178,11 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ═══ HERO SECTION ═══ */}
+      {/* ═══ HERO ═══ */}
       <section className="px-4 pt-16 pb-12 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ background: "rgba(0,224,255,0.08)", border: "1px solid rgba(0,224,255,0.15)" }}>
           <Zap className="w-4 h-4 text-[#00e0ff]" />
-          <span className="text-sm text-[#00e0ff]">Good Vibes Only: OpenClaw Edition</span>
+          <span className="text-sm text-[#00e0ff]">Good Vibes Only: OpenClaw Edition — BNB Chain</span>
         </div>
         
         <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
@@ -115,24 +198,31 @@ export default function Home() {
         </p>
 
         <div className="flex items-center justify-center gap-4 mb-12">
-          <button onClick={connect} className="btn-primary flex items-center gap-2 text-lg px-8 py-4">
-            <Shield className="w-5 h-5" />
-            Launch Dashboard
-            <ArrowRight className="w-5 h-5" />
-          </button>
+          {!isConnected ? (
+            <button onClick={connect} className="btn-primary flex items-center gap-2 text-lg px-8 py-4">
+              <Shield className="w-5 h-5" />
+              Connect &amp; Protect
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          ) : (
+            <button onClick={() => setActiveTab("positions")} className="btn-primary flex items-center gap-2 text-lg px-8 py-4">
+              <Shield className="w-5 h-5" />
+              Go to Dashboard
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          )}
           <a href="https://github.com/Tonyflam/rs" target="_blank" rel="noopener noreferrer" className="glass-card px-8 py-4 flex items-center gap-2 text-gray-300 hover:text-white transition-colors" style={{ borderRadius: "12px" }}>
             <Github className="w-5 h-5" />
             View Source
           </a>
         </div>
 
-        {/* Stats Bar */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
           {[
-            { label: "Value Protected", value: `${MOCK_STATS.totalValueProtected} BNB`, icon: Shield },
-            { label: "Active Agents", value: MOCK_STATS.activeAgents.toString(), icon: Bot },
-            { label: "Threats Detected", value: MOCK_STATS.threatsDetected.toString(), icon: AlertTriangle },
-            { label: "Protection Rate", value: `${MOCK_STATS.protectionRate}%`, icon: CheckCircle },
+            { label: "Value Protected", value: `${stats.totalValueProtected} BNB`, icon: Shield },
+            { label: "Active Agents", value: stats.activeAgents.toString(), icon: Bot },
+            { label: "Threats Detected", value: stats.threatsDetected.toString(), icon: AlertTriangle },
+            { label: "Protection Rate", value: `${stats.protectionRate}%`, icon: CheckCircle },
           ].map((stat, i) => (
             <div key={i} className="glass-card glow-border p-5 text-center" style={{ borderRadius: "14px" }}>
               <stat.icon className="w-6 h-6 text-[#00e0ff] mx-auto mb-2" />
@@ -143,10 +233,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ DASHBOARD TABS ═══ */}
+      {/* ═══ TABS ═══ */}
       <section className="px-4 pb-20">
         <div className="max-w-6xl mx-auto">
-          {/* Tab Navigation */}
           <div className="flex gap-1 mb-6 glass-card p-1.5 w-fit mx-auto" style={{ borderRadius: "12px" }}>
             {([
               { key: "overview", label: "Overview", icon: BarChart3 },
@@ -169,11 +258,20 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Tab Content */}
-          {activeTab === "overview" && <OverviewTab />}
-          {activeTab === "decisions" && <DecisionsTab />}
-          {activeTab === "positions" && <PositionsTab />}
-          {activeTab === "agent" && <AgentTab />}
+          {activeTab === "overview" && (
+            <OverviewTab stats={stats} decisions={contractData.decisions} riskSnapshot={contractData.riskSnapshot} isLive={contractData.isLive} />
+          )}
+          {activeTab === "decisions" && (
+            <DecisionsTab decisions={contractData.decisions} agentName={contractData.agentInfo?.name ?? "Guardian Alpha"} isLive={contractData.isLive} />
+          )}
+          {activeTab === "positions" && (
+            <PositionsTab userPosition={contractData.userPosition} isConnected={isConnected} depositAmount={depositAmount}
+              setDepositAmount={setDepositAmount} onDeposit={handleDeposit} onAuthorize={handleAuthorize}
+              isLive={contractData.isLive} isDeployed={contractData.isDeployed} />
+          )}
+          {activeTab === "agent" && (
+            <AgentTab agentInfo={contractData.agentInfo} reputation={contractData.reputation} successRate={contractData.successRate} isLive={contractData.isLive} />
+          )}
         </div>
       </section>
 
@@ -185,36 +283,12 @@ export default function Home() {
           </h3>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              {
-                icon: Eye,
-                title: "24/7 Monitoring",
-                desc: "AI continuously scans your DeFi positions, analyzing market conditions, liquidity changes, and protocol health in real-time.",
-              },
-              {
-                icon: AlertTriangle,
-                title: "Threat Detection",
-                desc: "Advanced risk analysis identifies rug pulls, liquidity drains, flash loan attacks, and abnormal price movements before damage occurs.",
-              },
-              {
-                icon: Shield,
-                title: "Auto-Protection",
-                desc: "When threats exceed your risk threshold, Aegis autonomously executes protective actions — emergency withdrawals, stop-losses, and rebalances.",
-              },
-              {
-                icon: Activity,
-                title: "On-Chain Transparency",
-                desc: "Every decision is logged immutably on BSC with AI reasoning hashes. Full audit trail for complete accountability.",
-              },
-              {
-                icon: Bot,
-                title: "ERC-8004 Identity",
-                desc: "Each agent has a verifiable on-chain identity as an ERC-721 NFT with reputation scoring and performance tracking.",
-              },
-              {
-                icon: Zap,
-                title: "User-Controlled Risk",
-                desc: "Set your own risk parameters — max slippage, stop-loss thresholds, action limits. You define the rules, AI enforces them.",
-              },
+              { icon: Eye, title: "24/7 Monitoring", desc: "AI continuously scans your DeFi positions via CoinGecko & DeFiLlama live data feeds, analyzing market conditions and liquidity in real-time." },
+              { icon: AlertTriangle, title: "5-Vector Threat Detection", desc: "Weighted risk analysis: Price Volatility (30%), Liquidity Health (25%), Volume Analysis (15%), Holder Concentration (15%), Momentum (15%)." },
+              { icon: Shield, title: "Autonomous Protection", desc: "When threats exceed your risk threshold, Aegis executes stop-losses, emergency withdrawals, and rebalances — all logged immutably on-chain." },
+              { icon: Cpu, title: "On-Chain Decision Log", desc: "Every AI decision is recorded in DecisionLogger with reasoning hashes, confidence scores, and risk snapshots for full transparency." },
+              { icon: Bot, title: "ERC-721 Agent NFTs", desc: "Each guardian has a verifiable on-chain identity as an NFT with 4 tiers (Scout→Archon), reputation scoring, and performance metrics." },
+              { icon: Lock, title: "Non-Custodial Vault", desc: "Your funds stay in your control. Set max slippage, stop-loss thresholds, and action limits. Emergency withdrawal always available." },
             ].map((feature, i) => (
               <div key={i} className="glass-card glow-border p-6 group hover:scale-[1.02] transition-transform" style={{ borderRadius: "16px" }}>
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(0,224,255,0.1)" }}>
@@ -249,22 +323,51 @@ export default function Home() {
 }
 
 // ─── TAB: Overview ────────────────────────────────────────────
-function OverviewTab() {
+interface OverviewProps {
+  stats: Record<string, string | number>;
+  decisions: { decisionType: number; riskLevel: number; confidence: number; targetUser: string; timestamp: number; actionTaken: boolean }[];
+  riskSnapshot: { liquidationRisk: number; volatilityScore: number; protocolRisk: number; smartContractRisk: number } | null;
+  isLive: boolean;
+}
+function OverviewTab({ stats, decisions, riskSnapshot, isLive }: OverviewProps) {
+  const riskBars = riskSnapshot ? [
+    { label: "Liquidation Risk", value: riskSnapshot.liquidationRisk, color: riskSnapshot.liquidationRisk > 50 ? "#ef4444" : riskSnapshot.liquidationRisk > 25 ? "#eab308" : "#22c55e" },
+    { label: "Volatility", value: riskSnapshot.volatilityScore, color: riskSnapshot.volatilityScore > 50 ? "#f97316" : riskSnapshot.volatilityScore > 25 ? "#eab308" : "#22c55e" },
+    { label: "Protocol Risk", value: riskSnapshot.protocolRisk, color: riskSnapshot.protocolRisk > 50 ? "#ef4444" : "#22c55e" },
+    { label: "Smart Contract Risk", value: riskSnapshot.smartContractRisk, color: riskSnapshot.smartContractRisk > 30 ? "#eab308" : "#22c55e" },
+  ] : [
+    { label: "Liquidation Risk", value: 12, color: "#22c55e" },
+    { label: "Volatility", value: 45, color: "#eab308" },
+    { label: "Protocol Risk", value: 8, color: "#22c55e" },
+    { label: "Smart Contract Risk", value: 15, color: "#22c55e" },
+  ];
+
+  const displayDecisions = decisions.length > 0 ? decisions.slice(0, 4).map((d, i) => ({
+    id: i + 1,
+    type: DECISION_TYPES[d.decisionType] || "Unknown",
+    risk: d.riskLevel,
+    user: `${d.targetUser.slice(0, 5)}...${d.targetUser.slice(-3)}`,
+    time: new Date(d.timestamp * 1000).toLocaleTimeString(),
+    action: d.actionTaken,
+  })) : MOCK_DECISIONS.slice(0, 4).map(d => ({
+    id: d.id,
+    type: d.type.replace(/([A-Z])/g, " $1").trim(),
+    risk: d.risk,
+    user: d.user,
+    time: d.time,
+    action: d.action,
+  }));
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
-      {/* Risk Gauge */}
       <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
         <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Activity className="w-5 h-5 text-[#00e0ff]" />
           System Risk Overview
+          {isLive && <span className="text-xs text-green-400 ml-auto">LIVE</span>}
         </h4>
         <div className="space-y-4">
-          {[
-            { label: "Liquidation Risk", value: 12, color: "#22c55e" },
-            { label: "Volatility", value: 45, color: "#eab308" },
-            { label: "Protocol Risk", value: 8, color: "#22c55e" },
-            { label: "Smart Contract Risk", value: 15, color: "#22c55e" },
-          ].map((risk, i) => (
+          {riskBars.map((risk, i) => (
             <div key={i}>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-400">{risk.label}</span>
@@ -278,24 +381,19 @@ function OverviewTab() {
         </div>
       </div>
 
-      {/* Recent Activity */}
       <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
         <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Zap className="w-5 h-5 text-[#00e0ff]" />
           Recent Activity
         </h4>
         <div className="space-y-3">
-          {MOCK_DECISIONS.slice(0, 4).map((d) => (
+          {displayDecisions.map((d) => (
             <div key={d.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${RISK_COLORS[d.risk]}15` }}>
-                {d.risk >= 3 ? (
-                  <AlertTriangle className="w-4 h-4" style={{ color: RISK_COLORS[d.risk] }} />
-                ) : (
-                  <CheckCircle className="w-4 h-4" style={{ color: RISK_COLORS[d.risk] }} />
-                )}
+                {d.risk >= 3 ? <AlertTriangle className="w-4 h-4" style={{ color: RISK_COLORS[d.risk] }} /> : <CheckCircle className="w-4 h-4" style={{ color: RISK_COLORS[d.risk] }} />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{d.type.replace(/([A-Z])/g, " $1").trim()}</p>
+                <p className="text-sm font-medium truncate">{d.type}</p>
                 <p className="text-xs text-gray-500">{d.user} · {d.time}</p>
               </div>
               <span className="text-xs font-mono px-2 py-1 rounded-md" style={{ background: `${RISK_COLORS[d.risk]}15`, color: RISK_COLORS[d.risk] }}>
@@ -306,7 +404,6 @@ function OverviewTab() {
         </div>
       </div>
 
-      {/* Protocol Stats */}
       <div className="glass-card glow-border p-6 md:col-span-2" style={{ borderRadius: "16px" }}>
         <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-[#00e0ff]" />
@@ -314,11 +411,11 @@ function OverviewTab() {
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
-            { label: "Total Decisions", value: MOCK_STATS.totalDecisions },
-            { label: "Value Protected", value: `${MOCK_STATS.totalValueProtected} BNB` },
-            { label: "Total Deposited", value: `${MOCK_STATS.totalDeposited} BNB` },
-            { label: "Threats Blocked", value: MOCK_STATS.threatsDetected },
-            { label: "Success Rate", value: `${MOCK_STATS.protectionRate}%` },
+            { label: "Total Decisions", value: stats.totalDecisions },
+            { label: "Value Protected", value: `${stats.totalValueProtected} BNB` },
+            { label: "Total Deposited", value: `${stats.totalDeposited} BNB` },
+            { label: "Threats Blocked", value: stats.threatsDetected },
+            { label: "Success Rate", value: `${stats.protectionRate}%` },
           ].map((stat, i) => (
             <div key={i} className="text-center p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
               <p className="stat-number text-2xl">{stat.value}</p>
@@ -332,15 +429,29 @@ function OverviewTab() {
 }
 
 // ─── TAB: AI Decisions ────────────────────────────────────────
-function DecisionsTab() {
+function DecisionsTab({ decisions, agentName, isLive }: {
+  decisions: { decisionType: number; riskLevel: number; confidence: number; targetUser: string; timestamp: number; actionTaken: boolean }[];
+  agentName: string;
+  isLive: boolean;
+}) {
+  const displayDecisions = decisions.length > 0 ? decisions.map((d, i) => ({
+    id: i + 1, agent: agentName, type: DECISION_TYPES[d.decisionType] || "Unknown", risk: d.riskLevel,
+    confidence: d.confidence, user: `${d.targetUser.slice(0, 5)}...${d.targetUser.slice(-3)}`,
+    time: new Date(d.timestamp * 1000).toLocaleString(), action: d.actionTaken,
+  })) : MOCK_DECISIONS.map(d => ({
+    id: d.id, agent: d.agent, type: d.type.replace(/([A-Z])/g, " $1").trim(),
+    risk: d.risk, confidence: d.confidence, user: d.user, time: d.time, action: d.action,
+  }));
+
   return (
     <div className="glass-card glow-border overflow-hidden" style={{ borderRadius: "16px" }}>
-      <div className="p-6 border-b" style={{ borderColor: "rgba(0,224,255,0.1)" }}>
+      <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: "rgba(0,224,255,0.1)" }}>
         <h4 className="text-lg font-semibold flex items-center gap-2">
           <Activity className="w-5 h-5 text-[#00e0ff]" />
           AI Decision Log
           <span className="text-xs text-gray-500 ml-2">(On-chain verified)</span>
         </h4>
+        {isLive && <span className="text-xs px-2 py-1 rounded-md bg-green-500/10 text-green-400 border border-green-500/20">LIVE DATA</span>}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -357,31 +468,18 @@ function DecisionsTab() {
             </tr>
           </thead>
           <tbody>
-            {MOCK_DECISIONS.map((d) => (
+            {displayDecisions.map((d) => (
               <tr key={d.id} className="border-b hover:bg-white/[0.02] transition-colors" style={{ borderColor: "rgba(0,224,255,0.03)" }}>
                 <td className="px-6 py-4 text-sm font-mono text-gray-400">#{d.id}</td>
                 <td className="px-6 py-4 text-sm">{d.agent}</td>
-                <td className="px-6 py-4">
-                  <span className="text-sm px-2 py-1 rounded-md" style={{ background: "rgba(0,224,255,0.08)", color: "#00e0ff" }}>
-                    {d.type.replace(/([A-Z])/g, " $1").trim()}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-sm font-medium px-2 py-1 rounded-md" style={{ background: `${RISK_COLORS[d.risk]}15`, color: RISK_COLORS[d.risk] }}>
-                    {RISK_LEVELS[d.risk]}
-                  </span>
-                </td>
+                <td className="px-6 py-4"><span className="text-sm px-2 py-1 rounded-md" style={{ background: "rgba(0,224,255,0.08)", color: "#00e0ff" }}>{d.type}</span></td>
+                <td className="px-6 py-4"><span className="text-sm font-medium px-2 py-1 rounded-md" style={{ background: `${RISK_COLORS[d.risk]}15`, color: RISK_COLORS[d.risk] }}>{RISK_LEVELS[d.risk]}</span></td>
                 <td className="px-6 py-4 text-sm font-mono">{d.confidence}%</td>
                 <td className="px-6 py-4 text-sm font-mono text-gray-400">{d.user}</td>
                 <td className="px-6 py-4 text-sm text-gray-500">{d.time}</td>
                 <td className="px-6 py-4">
-                  {d.action ? (
-                    <span className="flex items-center gap-1 text-sm text-green-400">
-                      <CheckCircle className="w-4 h-4" /> Executed
-                    </span>
-                  ) : (
-                    <span className="text-sm text-gray-500">Monitor</span>
-                  )}
+                  {d.action ? <span className="flex items-center gap-1 text-sm text-green-400"><CheckCircle className="w-4 h-4" /> Executed</span>
+                    : <span className="text-sm text-gray-500">Monitor</span>}
                 </td>
               </tr>
             ))}
@@ -393,13 +491,66 @@ function DecisionsTab() {
 }
 
 // ─── TAB: Positions ───────────────────────────────────────────
-function PositionsTab() {
+interface PositionsProps {
+  userPosition: { bnbBalance: string; isActive: boolean; agentAuthorized: boolean; authorizedAgentId: number; riskProfile: { maxSlippage: number; stopLossThreshold: number; allowAutoWithdraw: boolean } } | null;
+  isConnected: boolean; depositAmount: string; setDepositAmount: (v: string) => void;
+  onDeposit: () => void; onAuthorize: () => void; isLive: boolean; isDeployed: boolean;
+}
+function PositionsTab({ userPosition, isConnected, depositAmount, setDepositAmount, onDeposit, onAuthorize, isLive, isDeployed }: PositionsProps) {
   return (
     <div className="space-y-6">
+      {isConnected && isDeployed && (
+        <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
+          <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-[#00e0ff]" />
+            Your Position
+            {isLive && <span className="text-xs text-green-400 ml-auto">LIVE</span>}
+          </h4>
+          {userPosition?.isActive ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
+                  <p className="text-xs text-gray-500">Balance</p>
+                  <p className="stat-number text-xl">{userPosition.bnbBalance} BNB</p>
+                </div>
+                <div className="p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
+                  <p className="text-xs text-gray-500">Agent</p>
+                  <p className="text-sm font-semibold">{userPosition.agentAuthorized ? `#${userPosition.authorizedAgentId}` : "None"}</p>
+                </div>
+                <div className="p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
+                  <p className="text-xs text-gray-500">Stop-Loss</p>
+                  <p className="text-sm font-mono">{userPosition.riskProfile.stopLossThreshold / 100}%</p>
+                </div>
+                <div className="p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
+                  <p className="text-xs text-gray-500">Auto-Withdraw</p>
+                  <p className="text-sm">{userPosition.riskProfile.allowAutoWithdraw ? "Enabled" : "Disabled"}</p>
+                </div>
+              </div>
+              {!userPosition.agentAuthorized && (
+                <button onClick={onAuthorize} className="btn-primary flex items-center gap-2">
+                  <Bot className="w-4 h-4" /> Authorize Guardian Agent #0
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-gray-400 mb-4">No active position. Deposit BNB to get started.</p>
+              <div className="flex items-center gap-3 max-w-sm mx-auto">
+                <input type="number" step="0.01" placeholder="Amount (BNB)" value={depositAmount}
+                  onChange={e => setDepositAmount(e.target.value)}
+                  className="flex-1 px-4 py-3 rounded-xl bg-black/30 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#00e0ff]/50" />
+                <button onClick={onDeposit} className="btn-primary px-6 py-3 flex items-center gap-2">
+                  <Wallet className="w-4 h-4" /> Deposit
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
         <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Eye className="w-5 h-5 text-[#00e0ff]" />
-          Protected Positions
+          <Eye className="w-5 h-5 text-[#00e0ff]" /> Protected Positions
         </h4>
         <div className="grid gap-4">
           {MOCK_POSITIONS.map((pos, i) => (
@@ -421,64 +572,67 @@ function PositionsTab() {
                 <span className="text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: `${RISK_COLORS[pos.risk]}15`, color: RISK_COLORS[pos.risk] }}>
                   {RISK_LEVELS[pos.risk]}
                 </span>
-                <span className="text-xs text-gray-400 flex items-center gap-1">
-                  <Bot className="w-3 h-3" /> {pos.agent}
-                </span>
+                <span className="text-xs text-gray-400 flex items-center gap-1"><Bot className="w-3 h-3" /> {pos.agent}</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Deposit CTA */}
-      <div className="glass-card glow-border p-8 text-center" style={{ borderRadius: "16px" }}>
-        <Shield className="w-12 h-12 text-[#00e0ff] mx-auto mb-4" />
-        <h4 className="text-xl font-semibold mb-2">Protect Your DeFi Position</h4>
-        <p className="text-gray-400 mb-6 max-w-md mx-auto">
-          Deposit BNB into the Aegis Vault, authorize your AI guardian, and sleep peacefully knowing your assets are protected 24/7.
-        </p>
-        <button className="btn-primary text-lg px-8 py-4 flex items-center gap-2 mx-auto">
-          <Wallet className="w-5 h-5" />
-          Deposit &amp; Protect
-        </button>
-      </div>
+      {!isConnected && (
+        <div className="glass-card glow-border p-8 text-center" style={{ borderRadius: "16px" }}>
+          <Shield className="w-12 h-12 text-[#00e0ff] mx-auto mb-4" />
+          <h4 className="text-xl font-semibold mb-2">Protect Your DeFi Position</h4>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            Connect your wallet, deposit BNB, authorize your AI guardian, and sleep peacefully knowing your assets are protected 24/7.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── TAB: Agent Info ──────────────────────────────────────────
-function AgentTab() {
+function AgentTab({ agentInfo, reputation, successRate, isLive }: {
+  agentInfo: { name: string; operator: string; tier: number; totalDecisions: number; successfulActions: number; totalValueProtected: string; registeredAt: number } | null;
+  reputation: number; successRate: number; isLive: boolean;
+}) {
+  const agent = agentInfo ?? {
+    name: "Guardian Alpha", operator: "0x7a3...f91", tier: 3, totalDecisions: 1284,
+    successfulActions: 47, totalValueProtected: "2,847.5", registeredAt: Math.floor(Date.now() / 1000) - 86400,
+  };
+  const displayReputation = reputation > 0 ? reputation.toFixed(2) : "4.80";
+  const displaySuccessRate = successRate > 0 ? `${successRate.toFixed(1)}%` : "99.7%";
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
-      {/* Agent Card */}
       <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(0,224,255,0.2), rgba(168,85,247,0.2))" }}>
             <Bot className="w-8 h-8 text-[#00e0ff]" />
           </div>
           <div>
-            <h4 className="text-xl font-bold">Guardian Alpha</h4>
+            <h4 className="text-xl font-bold">{agent.name}</h4>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs px-2 py-0.5 rounded-md bg-[#00e0ff]/10 text-[#00e0ff] border border-[#00e0ff]/20">
-                Archon Tier
+                {AGENT_TIERS[agent.tier]} Tier
               </span>
               <span className="text-xs px-2 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-live" />
-                Active
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-live" /> Active
               </span>
+              {isLive && <span className="text-xs px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400">LIVE</span>}
             </div>
           </div>
         </div>
-
         <div className="space-y-3">
           {[
-            { label: "Agent ID", value: "#0 (ERC-721)" },
-            { label: "Operator", value: "0x7a3...f91" },
-            { label: "Registered", value: "Feb 10, 2026" },
-            { label: "Total Decisions", value: "1,284" },
-            { label: "Successful Actions", value: "47" },
-            { label: "Success Rate", value: "99.7%" },
-            { label: "Value Protected", value: "2,847.5 BNB" },
+            { label: "Agent ID", value: "#0 (ERC-721 NFT)" },
+            { label: "Operator", value: typeof agent.operator === "string" && agent.operator.length > 10 ? `${agent.operator.slice(0, 8)}...${agent.operator.slice(-4)}` : agent.operator },
+            { label: "Registered", value: new Date(agent.registeredAt * 1000).toLocaleDateString() },
+            { label: "Total Decisions", value: agent.totalDecisions.toLocaleString() },
+            { label: "Successful Actions", value: agent.successfulActions.toString() },
+            { label: "Success Rate", value: displaySuccessRate },
+            { label: "Value Protected", value: `${agent.totalValueProtected} BNB` },
           ].map((item, i) => (
             <div key={i} className="flex justify-between py-2 border-b" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
               <span className="text-sm text-gray-500">{item.label}</span>
@@ -488,32 +642,28 @@ function AgentTab() {
         </div>
       </div>
 
-      {/* Reputation */}
       <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
         <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-[#00e0ff]" />
-          Reputation &amp; Performance
+          <BarChart3 className="w-5 h-5 text-[#00e0ff]" /> Reputation &amp; Performance
         </h4>
-
         <div className="text-center mb-6 p-6 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
-          <p className="text-6xl font-bold text-[#00e0ff] cyan-glow">4.8</p>
-          <p className="text-sm text-gray-500 mt-2">Average Rating (23 reviews)</p>
+          <p className="text-6xl font-bold text-[#00e0ff] cyan-glow">{displayReputation}</p>
+          <p className="text-sm text-gray-500 mt-2">Average Rating</p>
           <div className="flex justify-center gap-1 mt-3">
             {[1, 2, 3, 4, 5].map((star) => (
-              <span key={star} className={`text-xl ${star <= 4 ? "text-yellow-400" : "text-yellow-400/50"}`}>★</span>
+              <span key={star} className={`text-xl ${star <= Math.round(parseFloat(displayReputation)) ? "text-yellow-400" : "text-yellow-400/30"}`}>★</span>
             ))}
           </div>
         </div>
-
         <div className="space-y-3">
           <h5 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Capabilities</h5>
           {[
             "Real-time DeFi position monitoring",
-            "Multi-protocol risk analysis",
+            "CoinGecko + DeFiLlama live data feeds",
+            "5-vector weighted risk analysis",
             "Autonomous emergency withdrawal",
             "Stop-loss & take-profit execution",
-            "On-chain decision attestation",
-            "Natural language risk reporting",
+            "On-chain decision attestation (keccak256)",
           ].map((cap, i) => (
             <div key={i} className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-[#00e0ff] flex-shrink-0" />
@@ -523,14 +673,13 @@ function AgentTab() {
         </div>
       </div>
 
-      {/* Architecture */}
       <div className="glass-card glow-border p-6 md:col-span-2" style={{ borderRadius: "16px" }}>
         <h4 className="text-lg font-semibold mb-4">Smart Contract Architecture</h4>
         <div className="grid md:grid-cols-3 gap-4">
           {[
-            { name: "AegisRegistry", desc: "ERC-721 agent identity NFTs with reputation tracking, tier-based permissions, and on-chain performance metrics.", color: "#00e0ff" },
-            { name: "AegisVault", desc: "Non-custodial vault with deposit/withdraw, agent authorization, risk profiles, and autonomous protection execution.", color: "#a855f7" },
-            { name: "DecisionLogger", desc: "Immutable on-chain log of every AI decision — risk assessments, threat detections, and protection actions.", color: "#22c55e" },
+            { name: "AegisRegistry", desc: "ERC-721 agent identity NFTs with 4-tier permissions, reputation scoring (1-5), and on-chain performance metrics.", color: "#00e0ff" },
+            { name: "AegisVault", desc: "Non-custodial vault for BNB/ERC-20 with agent authorization, per-user risk profiles, and autonomous protection execution.", color: "#a855f7" },
+            { name: "DecisionLogger", desc: "Immutable audit trail of every AI decision — risk snapshots, threat detections, and protection actions with reasoning hashes.", color: "#22c55e" },
           ].map((contract, i) => (
             <div key={i} className="p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.2)", borderLeft: `3px solid ${contract.color}` }}>
               <h5 className="font-mono text-sm font-bold mb-2" style={{ color: contract.color }}>{contract.name}</h5>
