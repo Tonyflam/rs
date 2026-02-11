@@ -1,1 +1,364 @@
-# rs
+<div align="center">
+
+# 🛡️ Aegis Protocol
+
+### AI-Powered Autonomous DeFi Guardian Agent for BNB Chain
+
+[![Built for BNB Chain](https://img.shields.io/badge/Built_for-BNB_Chain-F0B90B?style=for-the-badge&logo=binance)](https://www.bnbchain.org/)
+[![Good Vibes Only](https://img.shields.io/badge/Good_Vibes_Only-OpenClaw_Edition-00e0ff?style=for-the-badge)](https://openclaw.xyz)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?style=for-the-badge&logo=solidity)](https://soliditylang.org/)
+[![Tests](https://img.shields.io/badge/Tests-54%2F54_Passing-22c55e?style=for-the-badge)](./test/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
+
+*An autonomous AI agent that monitors your DeFi positions on BNB Chain 24/7, detects risks in real-time, and executes protective on-chain transactions — before you lose money.*
+
+[Live Demo](#live-demo) · [Smart Contracts](#smart-contracts) · [AI Agent](#ai-agent) · [Architecture](#architecture) · [Setup](#setup)
+
+</div>
+
+---
+
+## 🎯 Problem
+
+**DeFi users lose billions every year** to rug pulls, flash loan attacks, liquidity drains, and price crashes. Most of these losses happen when users aren't watching — overnight, during work, or simply because market conditions change faster than humans can react.
+
+Current solutions require:
+- ❌ Constant manual monitoring
+- ❌ Setting static stop-losses that often fail
+- ❌ Trusting centralized services with your keys
+- ❌ Technical expertise to detect threats
+
+## 💡 Solution: Aegis Protocol
+
+Aegis is a **fully autonomous AI guardian agent** that:
+
+1. **👁️ OBSERVES** — Continuously monitors your positions, market conditions, liquidity pools, and on-chain activity
+2. **🧠 ANALYZES** — AI-powered multi-factor risk analysis using 5 independent risk vectors
+3. **⚡ DECIDES** — Threat classification with confidence scoring and reasoning attestation
+4. **🛡️ EXECUTES** — Autonomous protective on-chain transactions with user-defined risk parameters
+
+### Key Differentiators
+
+| Feature | Traditional DeFi | Aegis Protocol |
+|---------|-----------------|----------------|
+| Monitoring | Manual | AI-Powered 24/7 |
+| Risk Detection | Price alerts only | 5-vector analysis |
+| Response Time | Minutes to hours | Seconds |
+| Custody | Give up keys | Non-custodial |
+| Transparency | Black box | On-chain decision log |
+| Identity | None | ERC-721 agent NFTs |
+| Customization | Limited | Per-user risk profiles |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                      AEGIS PROTOCOL                          │
+│                                                              │
+│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
+│   │   OBSERVE     │───▶│   ANALYZE     │───▶│   DECIDE     │   │
+│   │              │    │              │    │              │   │
+│   │ Market Data  │    │ AI Risk      │    │ Threat       │   │
+│   │ On-chain     │    │ Assessment   │    │ Detection    │   │
+│   │ Positions    │    │ 5 Risk       │    │ Confidence   │   │
+│   │ Liquidity    │    │ Vectors      │    │ Scoring      │   │
+│   └──────────────┘    └──────────────┘    └──────┬───────┘   │
+│                                                  │           │
+│   ┌──────────────────────────────────────────────▼───────┐   │
+│   │                     EXECUTE                          │   │
+│   │                                                      │   │
+│   │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │   │
+│   │  │AegisRegistry│  │ AegisVault  │  │DecisionLogger│  │   │
+│   │  │  (ERC-721)  │  │(Non-Custodial│  │ (Immutable  │  │   │
+│   │  │Agent Identity│  │ Protection) │  │  Audit Log) │  │   │
+│   │  └─────────────┘  └─────────────┘  └─────────────┘  │   │
+│   └──────────────────────────────────────────────────────┘   │
+│                         ▲                                    │
+│                    BNB Chain                                  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Smart Contract Architecture
+
+| Contract | Purpose | Key Features |
+|----------|---------|--------------|
+| **AegisRegistry** | Agent identity & reputation | ERC-721 NFTs, 4-tier system (Scout→Guardian→Sentinel→Archon), reputation scoring (1-5), performance tracking |
+| **AegisVault** | Non-custodial asset protection | BNB/ERC20 deposits, per-user risk profiles, agent authorization, autonomous protection execution, emergency withdrawal |
+| **DecisionLogger** | On-chain decision audit trail | Immutable decision records, risk snapshots, reasoning hashes for AI transparency, 6 decision types |
+
+### AI Risk Analysis Vectors
+
+The AI analyzer evaluates **5 independent risk factors** with weighted scoring:
+
+| Vector | Weight | Description |
+|--------|--------|-------------|
+| **Price Volatility** | 30% | 24h price change magnitude and direction |
+| **Liquidity Health** | 25% | Pool liquidity changes and total liquidity depth |
+| **Volume Analysis** | 15% | Trading volume anomalies and spike detection |
+| **Holder Concentration** | 15% | Whale ownership and centralization risk |
+| **Momentum Analysis** | 15% | Combined trend signals (price × volume × liquidity) |
+
+### Threat Types Detected
+
+- 🔴 **Rug Pull** — Simultaneous liquidity drain + price crash
+- 🔴 **Flash Loan Attack** — Extreme volume spikes (>1000%)
+- 🟠 **Whale Movement** — Top holder >70% concentration
+- 🟠 **Price Crash** — >20% decline in 24h
+- 🟡 **Liquidity Drain** — >25% liquidity decrease
+- 🟢 **Abnormal Volume** — >200% volume increase
+
+---
+
+## 📂 Project Structure
+
+```
+aegis-protocol/
+├── contracts/                      # Solidity smart contracts
+│   ├── AegisRegistry.sol           # ERC-721 agent identity & reputation
+│   ├── AegisVault.sol              # Non-custodial vault & protection
+│   └── DecisionLogger.sol          # On-chain decision audit log
+├── test/                           # Comprehensive test suites
+│   ├── AegisRegistry.test.ts       # 20 tests
+│   ├── AegisVault.test.ts          # 20 tests
+│   └── DecisionLogger.test.ts      # 14 tests
+├── scripts/
+│   └── deploy.ts                   # Multi-contract deployment script
+├── agent/                          # AI Guardian Agent
+│   └── src/
+│       ├── index.ts                # Main agent loop (Observe→Analyze→Decide→Execute)
+│       ├── analyzer.ts             # AI risk analysis engine (5-vector scoring)
+│       ├── monitor.ts              # Position & market data monitor
+│       ├── executor.ts             # On-chain transaction executor
+│       └── simulate.ts             # Demo simulation (no blockchain required)
+├── frontend/                       # Next.js 14 dashboard
+│   └── src/
+│       ├── app/
+│       │   ├── page.tsx            # Main dashboard with tabs & stats
+│       │   ├── layout.tsx          # Dark theme layout
+│       │   └── globals.css         # Cyberpunk glassmorphism theme
+│       └── lib/
+│           ├── constants.ts        # Contract addresses & chain config
+│           └── useWallet.ts        # MetaMask wallet hook
+├── hardhat.config.ts               # Multi-network configuration
+└── README.md                       # This file
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js v18+
+- npm or yarn
+- MetaMask (for frontend)
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/Tonyflam/rs.git
+cd rs
+npm install --legacy-peer-deps
+```
+
+### 2. Run Tests (54/54 passing)
+
+```bash
+npx hardhat test
+```
+
+### 3. Run AI Agent Simulation
+
+No blockchain connection needed — demonstrates the full AI analysis pipeline:
+
+```bash
+cd agent
+npm install
+npx ts-node src/simulate.ts
+```
+
+### 4. Deploy to BSC Testnet
+
+```bash
+cp .env.example .env
+# Edit .env with your private key (needs tBNB from faucet)
+npx hardhat run scripts/deploy.ts --network bscTestnet
+```
+
+### 5. Start the Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+# Open http://localhost:3000
+```
+
+### 6. Run the Live Agent
+
+```bash
+cd agent
+# Set contract addresses in ../.env
+npx ts-node src/index.ts
+```
+
+---
+
+## 🧪 Test Results
+
+**54/54 tests passing** across all 3 contracts:
+
+```
+  AegisRegistry
+    Deployment ✓
+    Agent Registration (5 tests) ✓
+    Agent Management (3 tests) ✓
+    Reputation System (4 tests) ✓
+    Agent Stats (4 tests) ✓
+    Admin Functions (3 tests) ✓
+
+  AegisVault
+    Deployment ✓
+    BNB Deposits (3 tests) ✓
+    BNB Withdrawals (3 tests) ✓
+    Agent Authorization (3 tests) ✓
+    Risk Profile (3 tests) ✓
+    Protection Execution (4 tests) ✓
+    Emergency & Admin (3 tests) ✓
+
+  DecisionLogger
+    Deployment ✓
+    Decision Logging (4 tests) ✓
+    Risk Snapshots (3 tests) ✓
+    View Functions (4 tests) ✓
+    Admin Functions (2 tests) ✓
+
+  54 passing
+```
+
+---
+
+## 🤖 AI Agent Details
+
+### The Observe → Analyze → Decide → Execute Loop
+
+Each cycle (default 30s), the agent:
+
+1. **Observes** real-time market data (price, volume, liquidity, holder distribution)
+2. **Analyzes** using 5 weighted risk vectors to produce a composite risk score (0-100)
+3. **Decides** by running threat detection against configurable thresholds
+4. **Executes** on-chain protective transactions when threats exceed user-defined risk profiles
+
+### Risk Scoring Example
+
+```
+📡 Market Data: BNB at $465, -22% 24h, volume +450%
+
+🧠 AI Analysis:
+   Overall Risk: 71/100 [HIGH]
+   ├─ Price Volatility: 100/100 (weight 0.30)
+   ├─ Liquidity Health:  65/100 (weight 0.25)
+   ├─ Volume Analysis:   55/100 (weight 0.15)
+   ├─ Holder Risk:       15/100 (weight 0.15)
+   └─ Momentum:          95/100 (weight 0.15)
+
+⚡ Threat: PRICE_CRASH — Confidence 90%
+🛡️ Action: STOP-LOSS executed autonomously
+```
+
+### On-Chain Transparency
+
+Every decision is logged with:
+- Decision type (RiskAssessment, ThreatDetected, ProtectionTriggered, etc.)
+- Risk level (None → Critical)
+- Confidence score
+- Reasoning hash (keccak256 of AI analysis text)
+- Timestamp
+
+This creates an **immutable, auditable record** of all AI agent behavior on BSC.
+
+---
+
+## ⛓️ Smart Contracts
+
+### Agent Tiers (ERC-721)
+
+| Tier | Name | Requirements |
+|------|------|-------------|
+| 0 | Scout | Default on registration |
+| 1 | Guardian | Promoted by admin |
+| 2 | Sentinel | Higher authority |
+| 3 | Archon | Maximum trust level |
+
+### Risk Profile (Per User)
+
+```solidity
+struct RiskProfile {
+    uint256 maxSlippage;           // Max acceptable slippage (bps)
+    uint256 stopLossThreshold;     // Stop-loss trigger (bps)
+    uint256 maxSingleActionValue;  // Max value per action
+    bool allowAutoWithdraw;        // Allow emergency withdrawals
+    bool allowAutoSwap;            // Allow auto-rebalancing
+}
+```
+
+### Protection Actions
+
+| Action | Description |
+|--------|-------------|
+| EmergencyWithdraw | Immediately withdraw user funds |
+| Rebalance | Adjust position allocation |
+| AlertOnly | Log alert without moving funds |
+| StopLoss | Execute stop-loss at threshold |
+| TakeProfit | Lock in gains at target |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Smart Contracts** | Solidity 0.8.24, OpenZeppelin, Hardhat |
+| **AI Agent** | TypeScript, ethers.js v6, Multi-factor analysis |
+| **Frontend** | Next.js 14, Tailwind CSS, ethers.js |
+| **Blockchain** | BNB Smart Chain (BSC Testnet/Mainnet) |
+| **Testing** | Hardhat + Chai (54 tests) |
+| **Standard** | ERC-721 / ERC-8004 compatible |
+
+---
+
+## 🔒 Security
+
+- **Non-Custodial**: Users retain full control. Emergency withdrawal always available.
+- **Agent Authorization**: Users explicitly authorize which agents can act.
+- **Risk Profiles**: Per-user configurable limits on agent actions.
+- **On-Chain Audit**: Every decision permanently logged on BSC.
+- **ReentrancyGuard**: All fund-moving functions protected.
+- **OpenZeppelin**: Battle-tested contract libraries throughout.
+
+---
+
+## 📜 AI Build Log
+
+This project was built with AI assistance as encouraged by the hackathon:
+
+1. **Competitive Analysis** — Analyzed 40+ competitor submissions to identify unique positioning
+2. **Architecture Design** — AI-assisted design of 3-contract system with autonomous agent loop
+3. **Smart Contract Development** — Solidity contracts with comprehensive test coverage (54/54)
+4. **AI Risk Engine** — Multi-factor weighted risk analysis with configurable thresholds
+5. **Frontend Design** — Cyberpunk-themed glassmorphism dashboard
+6. **Simulation System** — 5-scenario demo showing all risk levels
+
+All code was reviewed, tested, and verified. The AI agent's risk analysis uses transparent, interpretable algorithms for full auditability.
+
+---
+
+<div align="center">
+
+**Built with 🛡️ for BNB Chain · Good Vibes Only: OpenClaw Edition**
+
+*Aegis Protocol — Because your DeFi positions deserve a guardian that never sleeps.*
+
+</div>
