@@ -12,6 +12,8 @@
 
 *An autonomous AI agent that monitors your DeFi positions on BNB Chain 24/7, detects risks in real-time, and executes protective on-chain transactions — before you lose money.*
 
+**🌐 [Live Dashboard](https://aegis-protocol-1.vercel.app/) · 📜 [Verified Contracts](https://testnet.bscscan.com/address/0xac77139C2856788b7EEff767969353adF95D335e)**
+
 [Live Demo](#live-demo) · [Smart Contracts](#smart-contracts) · [AI Agent](#ai-agent) · [Architecture](#architecture) · [Setup](#setup)
 
 </div>

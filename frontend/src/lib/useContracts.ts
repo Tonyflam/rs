@@ -228,6 +228,88 @@ export function useContractData(provider: ethers.BrowserProvider | null) {
   };
 }
 
+// ─── Public Read-Only Hook (no wallet needed) ─────────────────
+
+export function usePublicContractData() {
+  const [agentCount, setAgentCount] = useState<number>(0);
+  const [totalDecisions, setTotalDecisions] = useState<number>(0);
+  const [totalThreats, setTotalThreats] = useState<number>(0);
+  const [totalProtections, setTotalProtections] = useState<number>(0);
+  const [totalDeposited, setTotalDeposited] = useState<string>("0");
+  const [totalValueProtected, setTotalValueProtected] = useState<string>("0");
+  const [agentName, setAgentName] = useState<string>("");
+  const [agentTier, setAgentTier] = useState<number>(0);
+  const [agentReputation, setAgentReputation] = useState<number>(0);
+  const [recentDecisions, setRecentDecisions] = useState<Decision[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+
+  const isDeployed = CONTRACTS.REGISTRY !== "0x0000000000000000000000000000000000000000";
+
+  const fetchPublicData = useCallback(async () => {
+    if (!isDeployed) return;
+    try {
+      const rpc = new ethers.JsonRpcProvider("https://data-seed-prebsc-1-s1.binance.org:8545");
+      const registry = new ethers.Contract(CONTRACTS.REGISTRY, REGISTRY_ABI, rpc);
+      const vault = new ethers.Contract(CONTRACTS.VAULT, VAULT_ABI, rpc);
+      const logger = new ethers.Contract(CONTRACTS.DECISION_LOGGER, LOGGER_ABI, rpc);
+
+      const results = await Promise.allSettled([
+        registry.getAgentCount(),
+        registry.getAgent(0),
+        registry.getReputationScore(0),
+        vault.getVaultStats(),
+        logger.getStats(),
+        logger.getRecentDecisions(10),
+      ]);
+
+      if (results[0].status === "fulfilled") setAgentCount(Number(results[0].value));
+      if (results[1].status === "fulfilled") {
+        const a = results[1].value;
+        setAgentName(a.name);
+        setAgentTier(Number(a.tier));
+      }
+      if (results[2].status === "fulfilled") setAgentReputation(Number(results[2].value) / 100);
+      if (results[3].status === "fulfilled") {
+        const v = results[3].value;
+        setTotalDeposited(ethers.formatEther(v[0]));
+        setTotalValueProtected(ethers.formatEther(v[2]));
+      }
+      if (results[4].status === "fulfilled") {
+        const s = results[4].value;
+        setTotalDecisions(Number(s[0]));
+        setTotalThreats(Number(s[1]));
+        setTotalProtections(Number(s[2]));
+      }
+      if (results[5].status === "fulfilled") {
+        const raw = results[5].value as any[];
+        setRecentDecisions(raw.map((d: any) => ({
+          agentId: Number(d.agentId),
+          targetUser: d.targetUser,
+          decisionType: Number(d.decisionType),
+          riskLevel: Number(d.riskLevel),
+          confidence: Number(d.confidence) / 100,
+          timestamp: Number(d.timestamp),
+          actionTaken: d.actionTaken,
+        })));
+      }
+
+      setIsLive(true);
+      setLoaded(true);
+    } catch (err: any) {
+      console.warn("Public RPC fetch failed:", err.message);
+      setIsLive(false);
+      setLoaded(true);
+    }
+  }, [isDeployed]);
+
+  return {
+    agentCount, totalDecisions, totalThreats, totalProtections,
+    totalDeposited, totalValueProtected, agentName, agentTier, agentReputation,
+    recentDecisions, loaded, isLive, fetchPublicData,
+  };
+}
+
 // ─── Contract Write Hook ─────────────────────────────────────
 
 export function useContractWrite(signer: ethers.Signer | null) {
