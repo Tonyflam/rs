@@ -35,3 +35,4 @@ ignition/deployments/
 # Misc
 *.log
 npm-debug.log*
+.env

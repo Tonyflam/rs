@@ -111,7 +111,39 @@ The AI analyzer evaluates **5 independent risk factors** with weighted scoring:
 
 ---
 
-## 📂 Project Structure
+## � Deployed on BSC Testnet
+
+> **All contracts are deployed, verified, and active on BNB Smart Chain Testnet (Chain ID 97)**
+
+### Contract Addresses
+
+| Contract | Address | BSCScan |
+|----------|---------|---------|
+| **AegisRegistry** | `0xac77139C2856788b7EEff767969353adF95D335e` | [View on BSCScan](https://testnet.bscscan.com/address/0xac77139C2856788b7EEff767969353adF95D335e) |
+| **AegisVault** | `0x73CE32Ece5d21836824C55c5EDB9d09b07F3a56E` | [View on BSCScan](https://testnet.bscscan.com/address/0x73CE32Ece5d21836824C55c5EDB9d09b07F3a56E) |
+| **DecisionLogger** | `0xEbfb45d0c075d8BdabD6421bdFB9A4b9570219ea` | [View on BSCScan](https://testnet.bscscan.com/address/0xEbfb45d0c075d8BdabD6421bdFB9A4b9570219ea) |
+
+### Verified Transactions (On-Chain Proof)
+
+| # | Action | TX Hash | Description |
+|---|--------|---------|-------------|
+| 1 | Agent Registration | `0xde61e7...` | Registered "Aegis Guardian Alpha" (Archon tier) |
+| 2 | Vault Deposit | [`0x1e1cfd68...`](https://testnet.bscscan.com/tx/0x1e1cfd68b0e8b964a03951a412543a58bf8df5821d5da6decb24a5da4aeed049) | Deposited 0.01 tBNB into AegisVault |
+| 3 | Agent Authorization | [`0x2e539040...`](https://testnet.bscscan.com/tx/0x2e5390407d84c3d51c622845ba60e9851cb5589e6d4a5ab19bc6ef2648ccc048) | Authorized Agent #0 for vault operations |
+| 4 | Risk Profile Update | [`0x5507e8d2...`](https://testnet.bscscan.com/tx/0x5507e8d2f7d851b5ea886a3578e448ac353db4b63e61ef197e8cf416a091fabf) | Set risk params (1% slippage, 15% stop-loss) |
+| 5 | AI Decision Log | [`0x3041b3b2...`](https://testnet.bscscan.com/tx/0x3041b3b251bca3e01bfcd81507bd35d2d6c0e9d397ce50b9c4a4639e5e0428a5) | ThreatDetected: High risk, 85% confidence |
+| 6 | Protection Trigger | [`0x04f10d83...`](https://testnet.bscscan.com/tx/0x04f10d83b6886859846d29b7461b0c7232940a921347e4784e7888dc02b26009) | ProtectionTriggered: Critical risk, 97% confidence |
+
+### Verification
+
+All contracts are verified on [Sourcify](https://repo.sourcify.dev):
+- [AegisRegistry](https://repo.sourcify.dev/contracts/full_match/97/0xac77139C2856788b7EEff767969353adF95D335e/)
+- [AegisVault](https://repo.sourcify.dev/contracts/full_match/97/0x73CE32Ece5d21836824C55c5EDB9d09b07F3a56E/)
+- [DecisionLogger](https://repo.sourcify.dev/contracts/full_match/97/0xEbfb45d0c075d8BdabD6421bdFB9A4b9570219ea/)
+
+---
+
+## �📂 Project Structure
 
 ```
 aegis-protocol/

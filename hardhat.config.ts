@@ -53,6 +53,9 @@ const config: HardhatUserConfig = {
       bsc: BSCSCAN_API_KEY,
     },
   },
+  sourcify: {
+    enabled: true,
+  },
   typechain: {
     outDir: "typechain-types",
     target: "ethers-v6",
