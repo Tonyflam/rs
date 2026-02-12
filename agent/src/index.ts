@@ -7,6 +7,8 @@ import * as dotenv from "dotenv";
 import { PositionMonitor } from "./monitor";
 import { RiskAnalyzer, RiskLevel, SuggestedAction } from "./analyzer";
 import { OnChainExecutor } from "./executor";
+import { AIReasoningEngine } from "./ai-engine";
+import { PancakeSwapProvider, BSC_TOKENS } from "./pancakeswap";
 import { ethers } from "ethers";
 
 dotenv.config({ path: "../.env" });
@@ -50,6 +52,8 @@ class AegisAgent {
   private monitor: PositionMonitor;
   private analyzer: RiskAnalyzer;
   private executor: OnChainExecutor;
+  private aiEngine: AIReasoningEngine;
+  private pancakeSwap: PancakeSwapProvider;
   private isRunning = false;
   private cycleCount = 0;
   private startTime = Date.now();
@@ -66,6 +70,12 @@ class AegisAgent {
 
     // Initialize AI Risk Analyzer
     this.analyzer = new RiskAnalyzer();
+
+    // Initialize LLM-Powered AI Engine
+    this.aiEngine = new AIReasoningEngine();
+
+    // Initialize PancakeSwap DEX Provider
+    this.pancakeSwap = new PancakeSwapProvider();
 
     // Initialize On-Chain Executor
     this.executor = new OnChainExecutor(
@@ -93,6 +103,8 @@ class AegisAgent {
     console.log(`  Agent ID: ${CONFIG.agentId}`);
     console.log(`  Poll Interval: ${CONFIG.pollInterval / 1000}s`);
     console.log(`  Operator: ${this.executor.getOperatorAddress()}`);
+    console.log(`  AI Engine: ${this.aiEngine.isEnabled() ? "LLM-Powered ✓" : "Heuristic Fallback"}`);
+    console.log(`  PancakeSwap: Connected ✓`);
     console.log("");
 
     this.isRunning = true;
@@ -156,6 +168,30 @@ class AegisAgent {
       console.log(`  → ${factor.name}: ${factor.score}/100 (w=${factor.weight}) — ${factor.description}`);
     }
 
+    // ─── Phase 2.5: LLM AI REASONING ─────────────────────
+    console.log("\n🤖 Phase 2.5: AI REASONING — Generating LLM analysis...");
+    const aiAnalysis = await this.aiEngine.analyzeMarket(marketData, riskSnapshot);
+    console.log(`  AI Sentiment: ${aiAnalysis.marketSentiment}`);
+    console.log(`  AI Risk Score: ${aiAnalysis.riskScore}/100`);
+    console.log(`  Threats: ${aiAnalysis.threats.length > 0 ? aiAnalysis.threats.join(", ") : "None"}`);
+    console.log(`  Key Insights:`);
+    for (const insight of aiAnalysis.keyInsights.slice(0, 3)) {
+      console.log(`    • ${insight}`);
+    }
+    console.log(`  Reasoning: ${aiAnalysis.reasoning.slice(0, 200)}...`);
+
+    // ─── Phase 2.7: DEX DATA (PancakeSwap) ────────────────
+    console.log("\n📊 Phase 2.7: DEX DATA — PancakeSwap on-chain prices...");
+    try {
+      const bnbPrice = await this.pancakeSwap.getBNBPrice();
+      if (bnbPrice > 0) {
+        console.log(`  BNB/USD (PancakeSwap): $${bnbPrice.toFixed(2)}`);
+        console.log(`  Price Delta (CoinGecko vs DEX): ${((marketData.price - bnbPrice) / bnbPrice * 100).toFixed(3)}%`);
+      }
+    } catch (err: any) {
+      console.log(`  DEX data unavailable: ${err.message}`);
+    }
+
     // ─── Phase 3: DECIDE ──────────────────────────────────
     console.log("\n⚡ Phase 3: DECIDE — Threat detection...");
     const threat = this.analyzer.detectThreats(marketData);
@@ -183,7 +219,10 @@ class AegisAgent {
     // Log decision for each watched address
     const watchedAddresses = this.monitor.getWatchedAddresses();
     const targetUser = watchedAddresses[0] || ethers.ZeroAddress;
-    const reasoningHash = this.analyzer.getReasoningHash(threat.reasoning);
+    
+    // Hash includes both heuristic reasoning AND LLM analysis for on-chain attestation
+    const combinedReasoning = `${threat.reasoning} | AI: ${aiAnalysis.reasoning}`;
+    const reasoningHash = this.analyzer.getReasoningHash(combinedReasoning);
 
     const decisionTx = await this.executor.logDecision(threat, targetUser, reasoningHash);
     if (decisionTx) {

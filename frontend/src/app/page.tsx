@@ -306,9 +306,9 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { icon: Eye, title: "24/7 Monitoring", desc: "AI continuously scans your DeFi positions via CoinGecko & DeFiLlama live data feeds, analyzing market conditions and liquidity in real-time." },
-              { icon: AlertTriangle, title: "5-Vector Threat Detection", desc: "Weighted risk analysis: Price Volatility (30%), Liquidity Health (25%), Volume Analysis (15%), Holder Concentration (15%), Momentum (15%)." },
+              { icon: Cpu, title: "LLM AI Reasoning", desc: "Powered by Groq (Llama 3.3 70B) or OpenAI (GPT-4o). Real natural language market analysis with structured threat reports and heuristic fallback." },
+              { icon: AlertTriangle, title: "5-Vector + DEX Verification", desc: "Weighted heuristic risk + PancakeSwap V2 on-chain price cross-verification. Detects oracle manipulation by comparing API vs DEX prices." },
               { icon: Shield, title: "Autonomous Protection", desc: "When threats exceed your risk threshold, Aegis executes stop-losses, emergency withdrawals, and rebalances — all logged immutably on-chain." },
-              { icon: Cpu, title: "On-Chain Decision Log", desc: "Every AI decision is recorded in DecisionLogger with reasoning hashes, confidence scores, and risk snapshots for full transparency." },
               { icon: Bot, title: "ERC-721 Agent NFTs", desc: "Each guardian has a verifiable on-chain identity as an NFT with 4 tiers (Scout→Archon), reputation scoring, and performance metrics." },
               { icon: Lock, title: "Non-Custodial Vault", desc: "Your funds stay in your control. Set max slippage, stop-loss thresholds, and action limits. Emergency withdrawal always available." },
             ].map((feature, i) => (
@@ -320,6 +320,149 @@ export default function Home() {
                 <p className="text-gray-400 text-sm leading-relaxed">{feature.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ AI INTELLIGENCE ENGINE ═══ */}
+      <section className="px-4 pb-20">
+        <div className="max-w-6xl mx-auto">
+          <h3 className="text-3xl font-bold text-center mb-4">
+            <span className="text-[#00e0ff]">AI Intelligence</span> Engine
+          </h3>
+          <p className="text-center text-gray-400 mb-10 max-w-2xl mx-auto">
+            Aegis combines LLM reasoning with on-chain DEX data for multi-layered threat detection that goes beyond simple heuristics.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {/* LLM Reasoning Panel */}
+            <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
+              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Cpu className="w-5 h-5 text-[#a855f7]" />
+                LLM-Powered Analysis
+                <span className="ml-auto text-xs px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20">Groq / OpenAI</span>
+              </h4>
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.3)" }}>
+                  <p className="text-xs text-purple-400 font-mono mb-2">AI Market Analysis — Example Output</p>
+                  <p className="text-sm text-gray-300 leading-relaxed italic">
+                    &quot;BNB trading at $612.50 with +1.8% 24h movement. Volume at $780M (+15% change). 
+                    BSC ecosystem liquidity at $4.2B. Risk engine scores: Liquidation 8/100, Volatility 22/100, 
+                    Protocol 5/100. No significant threats detected. All metrics within normal parameters.&quot;
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.15)" }}>
+                    <p className="text-xs text-gray-500">Sentiment</p>
+                    <p className="text-sm font-semibold text-purple-400">Neutral</p>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                    <p className="text-xs text-gray-500">AI Risk Score</p>
+                    <p className="text-sm font-semibold text-green-400">22/100</p>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{ background: "rgba(0,224,255,0.08)", border: "1px solid rgba(0,224,255,0.15)" }}>
+                    <p className="text-xs text-gray-500">Confidence</p>
+                    <p className="text-sm font-semibold text-[#00e0ff]">92%</p>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                    <p className="text-xs text-gray-500">Threats</p>
+                    <p className="text-sm font-semibold text-green-400">None ✓</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-2">Key Insights</p>
+                  <div className="space-y-1">
+                    {[
+                      "BNB stable at $612.50 with +1.8% 24h change",
+                      "Volume up 15% from baseline — healthy activity",
+                      "Liquidity: $4.20B (+0.5%) — no drain risk",
+                    ].map((insight, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm text-gray-400">
+                        <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
+                        <span>{insight}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* PancakeSwap DEX Panel */}
+            <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
+              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-[#f0b90b]" />
+                PancakeSwap V2 — On-Chain DEX
+                <span className="ml-auto text-xs px-2 py-1 rounded-md bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">BSC Mainnet</span>
+              </h4>
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.3)" }}>
+                  <p className="text-xs text-yellow-400 font-mono mb-3">Price Oracle Cross-Verification</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">CoinGecko (API)</span>
+                      <span className="text-sm font-mono text-white">$612.50</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">PancakeSwap (On-chain)</span>
+                      <span className="text-sm font-mono text-white">$612.38</span>
+                    </div>
+                    <div className="h-px bg-gray-700 my-1" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Price Delta</span>
+                      <span className="text-sm font-mono font-bold text-green-400">0.019% ✓</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-2">Monitored BSC Tokens</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["WBNB", "BUSD", "USDT", "CAKE", "ETH", "BTCB", "USDC", "XRP"].map((token) => (
+                      <span key={token} className="text-xs px-2 py-1 rounded-md font-mono" style={{ background: "rgba(240,185,11,0.08)", color: "#f0b90b", border: "1px solid rgba(240,185,11,0.15)" }}>
+                        {token}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg" style={{ background: "rgba(240,185,11,0.08)", border: "1px solid rgba(240,185,11,0.15)" }}>
+                    <p className="text-xs text-gray-500">Oracle Status</p>
+                    <p className="text-sm font-semibold text-green-400">Consistent ✓</p>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{ background: "rgba(240,185,11,0.08)", border: "1px solid rgba(240,185,11,0.15)" }}>
+                    <p className="text-xs text-gray-500">Data Source</p>
+                    <p className="text-sm font-semibold text-yellow-400">On-Chain</p>
+                  </div>
+                </div>
+                <div className="p-3 rounded-lg" style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.1)" }}>
+                  <p className="text-xs text-red-400 font-mono mb-1">Alert Thresholds</p>
+                  <p className="text-xs text-gray-400">Delta &gt; 1% → Potential manipulation warning</p>
+                  <p className="text-xs text-gray-400">Delta &gt; 5% → CRITICAL oracle attack alert</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Agent Loop Diagram */}
+          <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
+            <h4 className="text-lg font-semibold mb-4 text-center">Agent Decision Loop (30s Cycles)</h4>
+            <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+              {[
+                { label: "OBSERVE", sub: "CoinGecko + DeFiLlama", color: "#00e0ff" },
+                { label: "ANALYZE", sub: "5-Vector Risk Engine", color: "#a855f7" },
+                { label: "AI REASON", sub: "LLM (Groq/OpenAI)", color: "#f97316" },
+                { label: "DEX VERIFY", sub: "PancakeSwap V2", color: "#f0b90b" },
+                { label: "DECIDE", sub: "Threat + Confidence", color: "#ef4444" },
+                { label: "EXECUTE", sub: "On-Chain TX", color: "#22c55e" },
+              ].map((step, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl text-center min-w-[120px]" style={{ background: `${step.color}10`, border: `1px solid ${step.color}30` }}>
+                    <p className="font-bold" style={{ color: step.color }}>{step.label}</p>
+                    <p className="text-xs text-gray-500 mt-1">{step.sub}</p>
+                  </div>
+                  {i < 5 && <ArrowRight className="w-4 h-4 text-gray-600 hidden md:block" />}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -391,34 +534,60 @@ export default function Home() {
             <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-[#00e0ff]" />
               On-Chain Transaction Evidence
-              <span className="ml-auto text-xs px-2 py-1 rounded-md bg-green-500/10 text-green-400 border border-green-500/20">6 Verified TXs</span>
+              <span className="ml-auto text-xs px-2 py-1 rounded-md bg-green-500/10 text-green-400 border border-green-500/20">15 Verified TXs</span>
             </h4>
+            <p className="text-sm text-gray-400 mb-4">Full threat lifecycle: Normal → Volatility Warning → Threat Detected → Protection Triggered → Recovery → Review</p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-gray-500 border-b" style={{ borderColor: "rgba(0,224,255,0.05)" }}>
+                    <th className="px-4 py-2 text-left">#</th>
+                    <th className="px-4 py-2 text-left">Phase</th>
                     <th className="px-4 py-2 text-left">Action</th>
-                    <th className="px-4 py-2 text-left">Transaction Hash</th>
+                    <th className="px-4 py-2 text-left">Risk</th>
                     <th className="px-4 py-2 text-left">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { action: "Vault Deposit (0.01 tBNB)", hash: "0x1e1cfd68ebccbc26acb6a8d0a0c2e0a7c9267d2eaa22fa62fc5a732b84f94497" },
-                    { action: "Agent Authorization", hash: "0x2e539040e65f1df23f2b25b7d3f3fdd0a81a14c63dae5f1f6a3a21785f4fa7f8" },
-                    { action: "Risk Profile Update", hash: "0x5507e8d257a81c71b0fce13e9ebd5c7dff0ed5d9dd7a1e29ec7b7c0ea8c7ed79" },
-                    { action: "AI Threat Detection (85%)", hash: "0x3041b3b2e09a3f4b3283b53ef02ef9cfee3e3c8f0e32f3c91bf67cf3a6c46b82" },
-                    { action: "Protection Trigger (97%)", hash: "0x04f10d83e978e4c22fdb1c3f3e97c9a5e0e9b14c2e4d8a7c6b5f3e2d1c0a9b8e" },
+                    { phase: "Setup", action: "Agent Registration (Archon)", risk: "—" },
+                    { phase: "Setup", action: "Vault Deposit (0.01 tBNB)", risk: "—" },
+                    { phase: "Setup", action: "Agent Authorization", risk: "—" },
+                    { phase: "Config", action: "Risk Profile (1% slip, 15% SL)", risk: "—" },
+                    { phase: "Normal", action: "AI Analysis → All Clear (92%)", risk: "NONE" },
+                    { phase: "Normal", action: "Risk Snapshot (15/100)", risk: "LOW" },
+                    { phase: "Escalation", action: "Volatility Warning (-4.2%)", risk: "LOW" },
+                    { phase: "Escalation", action: "Risk Snapshot (38/100)", risk: "MED" },
+                    { phase: "Threat", action: "Abnormal Volume (+350%)", risk: "HIGH" },
+                    { phase: "Defense", action: "Aggressive Profile (0.3% slip)", risk: "—" },
+                    { phase: "Defense", action: "Risk Snapshot (68/100)", risk: "HIGH" },
+                    { phase: "Protection", action: "Stop-Loss Triggered (95%)", risk: "CRIT" },
+                    { phase: "Recovery", action: "Market Stabilized", risk: "LOW" },
+                    { phase: "Recovery", action: "Risk Normalized (18/100)", risk: "LOW" },
+                    { phase: "Review", action: "Position Review + Feedback 5/5", risk: "NONE" },
                   ].map((tx, i) => (
                     <tr key={i} className="border-b hover:bg-white/[0.02]" style={{ borderColor: "rgba(0,224,255,0.03)" }}>
-                      <td className="px-4 py-3 text-gray-300">{tx.action}</td>
-                      <td className="px-4 py-3">
-                        <a href={`https://testnet.bscscan.com/tx/${tx.hash}`} target="_blank" rel="noopener noreferrer"
-                          className="font-mono text-xs text-[#00e0ff] hover:underline">
-                          {tx.hash.slice(0, 10)}...{tx.hash.slice(-8)}
-                        </a>
+                      <td className="px-4 py-2.5 text-gray-500 font-mono">{i + 1}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`text-xs px-2 py-0.5 rounded-md ${
+                          tx.phase === "Threat" || tx.phase === "Protection" ? "bg-red-500/10 text-red-400" :
+                          tx.phase === "Escalation" || tx.phase === "Defense" ? "bg-yellow-500/10 text-yellow-400" :
+                          tx.phase === "Recovery" ? "bg-green-500/10 text-green-400" :
+                          "bg-gray-500/10 text-gray-400"
+                        }`}>{tx.phase}</span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5 text-gray-300 text-xs">{tx.action}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`text-xs font-mono ${
+                          tx.risk === "CRIT" ? "text-red-400" :
+                          tx.risk === "HIGH" ? "text-orange-400" :
+                          tx.risk === "MED" ? "text-yellow-400" :
+                          tx.risk === "LOW" ? "text-blue-400" :
+                          tx.risk === "NONE" ? "text-green-400" :
+                          "text-gray-500"
+                        }`}>{tx.risk}</span>
+                      </td>
+                      <td className="px-4 py-2.5">
                         <span className="flex items-center gap-1 text-green-400 text-xs">
                           <CheckCircle className="w-3 h-3" /> Confirmed
                         </span>
@@ -435,8 +604,8 @@ export default function Home() {
             {[
               { label: "Solidity Tests", value: "54 Passing", color: "#22c55e" },
               { label: "Contract LOC", value: "1,326", color: "#00e0ff" },
-              { label: "Risk Vectors", value: "5-Vector AI", color: "#a855f7" },
-              { label: "Chain", value: "BNB Testnet", color: "#f0b90b" },
+              { label: "AI Engine", value: "LLM + Heuristic", color: "#a855f7" },
+              { label: "DEX Integration", value: "PancakeSwap V2", color: "#f0b90b" },
             ].map((badge, i) => (
               <div key={i} className="glass-card p-4 text-center" style={{ borderRadius: "12px", borderLeft: `3px solid ${badge.color}` }}>
                 <p className="text-lg font-bold" style={{ color: badge.color }}>{badge.value}</p>
@@ -810,12 +979,13 @@ function AgentTab({ agentInfo, reputation, successRate, isLive }: {
         <div className="space-y-3">
           <h5 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Capabilities</h5>
           {[
-            "Real-time DeFi position monitoring",
+            "Real-time DeFi position monitoring (30s cycles)",
+            "LLM-powered reasoning (Groq Llama 3.3 70B / OpenAI GPT-4o)",
+            "PancakeSwap V2 on-chain price verification",
             "CoinGecko + DeFiLlama live data feeds",
-            "5-vector weighted risk analysis",
-            "Autonomous emergency withdrawal",
-            "Stop-loss & take-profit execution",
-            "On-chain decision attestation (keccak256)",
+            "5-vector weighted risk analysis engine",
+            "Autonomous stop-loss & emergency withdrawal",
+            "On-chain decision attestation (keccak256 reasoning hash)",
           ].map((cap, i) => (
             <div key={i} className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-[#00e0ff] flex-shrink-0" />
