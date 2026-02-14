@@ -39,7 +39,7 @@ const VAULT_ABI = [
 
 const LOGGER_ABI = [
   "function logDecision(uint256 agentId, address targetUser, uint8 decisionType, uint8 riskLevel, uint256 confidence, bytes32 analysisHash, bytes32 dataHash, bool actionTaken, uint256 actionId) external returns (uint256)",
-  "function updateRiskSnapshot(address user, uint256 overallRisk, uint256 liquidationRisk, uint256 volatilityScore, uint256 protocolRisk, uint256 smartContractRisk) external",
+  "function updateRiskSnapshot(address user, uint8 overallRisk, uint256 liquidationRisk, uint256 volatilityScore, uint256 protocolRisk, uint256 smartContractRisk, bytes32 detailsHash) external",
   "function getStats() view returns (uint256 totalDecisions, uint256 totalThreats, uint256 totalProtections)",
   "function getRecentDecisions(uint256 count) view returns (tuple(uint256 agentId, address targetUser, uint8 decisionType, uint8 riskLevel, uint256 confidence, uint256 timestamp, bool actionTaken)[] memory)",
 ];
@@ -122,8 +122,9 @@ async function main() {
 
   // ═══ PHASE 5: Risk Snapshot Update ═══
   console.log("\n═══ PHASE 5: Risk Snapshot — Low Risk ═══");
-  await logTx("Risk Snapshot (overall=15, liq=8, vol=22, proto=5, sc=12)",
-    logger.updateRiskSnapshot(wallet.address, 1500, 800, 2200, 500, 1200)
+  const snapshotHash1 = ethers.keccak256(ethers.toUtf8Bytes("Low risk snapshot - normal market conditions"));
+  await logTx("Risk Snapshot (overall=LOW, liq=8, vol=22, proto=5, sc=12)",
+    logger.updateRiskSnapshot(wallet.address, 1, 800, 2200, 500, 1200, snapshotHash1)
   );
 
   // ═══ PHASE 6: AI Detects Volatility Increase ═══
@@ -140,8 +141,9 @@ async function main() {
 
   // ═══ PHASE 7: Update Risk Snapshot — Elevated ═══
   console.log("\n═══ PHASE 7: Risk Snapshot — Elevated ═══");
-  await logTx("Risk Snapshot (overall=38, liq=22, vol=55, proto=12, sc=15)",
-    logger.updateRiskSnapshot(wallet.address, 3800, 2200, 5500, 1200, 1500)
+  const snapshotHash2 = ethers.keccak256(ethers.toUtf8Bytes("Elevated risk snapshot - volatility increase detected"));
+  await logTx("Risk Snapshot (overall=MEDIUM, liq=22, vol=55, proto=12, sc=15)",
+    logger.updateRiskSnapshot(wallet.address, 2, 2200, 5500, 1200, 1500, snapshotHash2)
   );
 
   // ═══ PHASE 8: AI Detects Threat — Abnormal Volume ═══
@@ -170,8 +172,9 @@ async function main() {
 
   // ═══ PHASE 10: Risk Snapshot — High Risk ═══
   console.log("\n═══ PHASE 10: Risk Snapshot — High ═══");
-  await logTx("Risk Snapshot (overall=68, liq=52, vol=78, proto=35, sc=20)",
-    logger.updateRiskSnapshot(wallet.address, 6800, 5200, 7800, 3500, 2000)
+  const snapshotHash3 = ethers.keccak256(ethers.toUtf8Bytes("High risk snapshot - threat confirmed, protection imminent"));
+  await logTx("Risk Snapshot (overall=HIGH, liq=52, vol=78, proto=35, sc=20)",
+    logger.updateRiskSnapshot(wallet.address, 3, 5200, 7800, 3500, 2000, snapshotHash3)
   );
 
   // ═══ PHASE 11: AI Protection Triggered ═══
@@ -200,8 +203,9 @@ async function main() {
 
   // ═══ PHASE 13: Risk Snapshot — Normalized ═══
   console.log("\n═══ PHASE 13: Risk Snapshot — Normalized ═══");
-  await logTx("Risk Snapshot (overall=18, liq=10, vol=28, proto=8, sc=12)",
-    logger.updateRiskSnapshot(wallet.address, 1800, 1000, 2800, 800, 1200)
+  const snapshotHash4 = ethers.keccak256(ethers.toUtf8Bytes("Normalized risk snapshot - market recovered, resuming standard monitoring"));
+  await logTx("Risk Snapshot (overall=LOW, liq=10, vol=28, proto=8, sc=12)",
+    logger.updateRiskSnapshot(wallet.address, 1, 1000, 2800, 800, 1200, snapshotHash4)
   );
 
   // ═══ PHASE 14: Position Review ═══
@@ -216,10 +220,16 @@ async function main() {
     logger.logDecision(0, wallet.address, 5, 0, 9800, analysisHash6, dataHash6, false, 0)
   );
 
-  // ═══ PHASE 15: Agent Feedback ═══
-  console.log("\n═══ PHASE 15: Agent Reputation Feedback ═══");
-  await logTx("Give Feedback: Score 5/5 — 'Excellent threat detection'",
-    registry.giveFeedback(0, 5, "Excellent threat detection during market crash. Protection saved 12% of position value.")
+  // ═══ PHASE 15: Final Summary Log ═══
+  console.log("\n═══ PHASE 15: Final — Agent Performance Summary ═══");
+  const analysisHash7 = ethers.keccak256(ethers.toUtf8Bytes(
+    "Agent performance review: 13 cycles completed. Threat detection accuracy: 95%+. Protection actions: saved estimated 12% of position value during market crash. Oracle cross-verification: 0 manipulation attempts detected. Agent uptime: 100%. Rating: Excellent."
+  ));
+  const dataHash7 = ethers.keccak256(ethers.toUtf8Bytes(
+    JSON.stringify({ cycles: 13, accuracy: 95, saved: 12, manipulations: 0, uptime: 100, rating: "excellent" })
+  ));
+  await logTx("AI Decision: Agent Performance Summary (Excellent, 99% confidence)",
+    logger.logDecision(0, wallet.address, 5, 0, 9900, analysisHash7, dataHash7, false, 0)
   );
 
   // ═══ SUMMARY ═══

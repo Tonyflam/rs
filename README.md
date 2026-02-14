@@ -13,9 +13,9 @@
 
 *An autonomous AI agent — powered by LLM reasoning (Groq/OpenAI) + PancakeSwap on-chain data — that monitors your DeFi positions on BNB Chain 24/7, detects risks in real-time, and executes protective on-chain transactions before you lose money.*
 
-**🌐 [Live Dashboard](https://aegis-protocol-1.vercel.app/) · 📜 [Verified Contracts](https://testnet.bscscan.com/address/0xac77139C2856788b7EEff767969353adF95D335e) · 🧪 [15 On-Chain TXs](#-on-chain-proof-15-verified-transactions)**
+**🌐 [Live Dashboard](https://aegis-protocol-1.vercel.app/) · 📜 [Verified Contracts](https://testnet.bscscan.com/address/0xac77139C2856788b7EEff767969353adF95D335e) · 🧪 [13 On-Chain TXs](#-on-chain-proof-13-verified-transactions) · 🤖 [AI Build Log](./AI_BUILD_LOG.md)**
 
-[Architecture](#-architecture) · [AI Engine](#-ai-reasoning-engine-llm-powered) · [On-Chain Proof](#-on-chain-proof-15-verified-transactions) · [Smart Contracts](#%EF%B8%8F-smart-contracts) · [Quick Start](#-quick-start)
+[Architecture](#-architecture) · [AI Engine](#-ai-reasoning-engine-llm-powered) · [On-Chain Proof](#-on-chain-proof-13-verified-transactions) · [Smart Contracts](#%EF%B8%8F-smart-contracts) · [Quick Start](#-quick-start) · [AI Build Log](./AI_BUILD_LOG.md)
 
 </div>
 
@@ -179,7 +179,7 @@ If delta > 5%  → CRITICAL: Oracle attack likely
 
 ---
 
-## 🔍 On-Chain Proof (15 Verified Transactions)
+## 🔍 On-Chain Proof (13 Verified Transactions)
 
 > **All contracts deployed, verified, and battle-tested on BSC Testnet (Chain ID 97)**
 
@@ -191,27 +191,25 @@ If delta > 5%  → CRITICAL: Oracle attack likely
 | **AegisVault** | `0x73CE32Ece5d21836824C55c5EDB9d09b07F3a56E` | [BSCScan](https://testnet.bscscan.com/address/0x73CE32Ece5d21836824C55c5EDB9d09b07F3a56E) · [Sourcify](https://repo.sourcify.dev/contracts/full_match/97/0x73CE32Ece5d21836824C55c5EDB9d09b07F3a56E/) |
 | **DecisionLogger** | `0xEbfb45d0c075d8BdabD6421bdFB9A4b9570219ea` | [BSCScan](https://testnet.bscscan.com/address/0xEbfb45d0c075d8BdabD6421bdFB9A4b9570219ea) · [Sourcify](https://repo.sourcify.dev/contracts/full_match/97/0xEbfb45d0c075d8BdabD6421bdFB9A4b9570219ea/) |
 
-### Verified Transaction Log
+### Verified Transaction Log (Click to verify on BSCScan)
 
 The comprehensive demo simulates a **full threat lifecycle** — from normal monitoring through threat escalation, protection triggering, and recovery:
 
-| # | Phase | Action | Risk Level | Confidence |
-|---|-------|--------|------------|------------|
-| 1 | Setup | Agent Registration (Archon tier) | — | — |
-| 2 | Setup | Vault Deposit (0.01 tBNB) | — | — |
-| 3 | Setup | Agent Authorization | — | — |
-| 4 | Config | Risk Profile (1% slippage, 15% SL) | — | — |
-| 5 | Normal | AI Market Analysis → All Clear | NONE | 92% |
-| 6 | Normal | Risk Snapshot (overall: 15/100) | LOW | — |
-| 7 | Escalation | Volatility Warning (-4.2% 6h) | LOW | 78% |
-| 8 | Escalation | Risk Snapshot (overall: 38/100) | MEDIUM | — |
-| 9 | **Threat** | **Abnormal Volume (+350%, whale selling)** | **HIGH** | **88%** |
-| 10 | Defense | Risk Profile → Aggressive (0.3% slip, 5% SL) | — | — |
-| 11 | Defense | Risk Snapshot (overall: 68/100) | HIGH | — |
-| 12 | **Protection** | **Stop-Loss Triggered (-15.3%, liquidity -28%)** | **CRITICAL** | **95%** |
-| 13 | Recovery | Market Stabilized, Recovery Detected | LOW | 91% |
-| 14 | Recovery | Risk Snapshot Normalized (overall: 18/100) | LOW | — |
-| 15 | Review | Position Review + Agent Feedback (5/5) | NONE | 98% |
+| # | Phase | Action | Risk Level | Confidence | TX Hash |
+|---|-------|--------|------------|------------|---------|
+| 1 | Setup | Vault Deposit (0.005 tBNB) | — | — | [`0x3602f8...216c7a`](https://testnet.bscscan.com/tx/0x3602f865ec5df8b7bcb389f0caea337cdbe7bd5da699bfe373d1176894216c7a) |
+| 2 | Config | Risk Profile (0.5% slippage, 10% SL) | — | — | [`0x4e2ddc...126989`](https://testnet.bscscan.com/tx/0x4e2ddc3e04bee004d185574497b746ac5cc561ab1da362e1eb64f207bd126989) |
+| 3 | Normal | AI Market Analysis → All Clear | NONE | 92% | [`0xf0922a...65dbfb`](https://testnet.bscscan.com/tx/0xf0922ad8ff51553d014ebad35c04b7b72e0ec2b216325d652f557e988765dbfb) |
+| 4 | Normal | Risk Snapshot (overall: 15/100) | LOW | — | [`0xcd7429...584618`](https://testnet.bscscan.com/tx/0xcd74298263c839ce58dd65d453dea8a88776fb5bb34029ad972eccd1ca584618) |
+| 5 | Escalation | Volatility Warning (-4.2% 6h) | LOW | 78% | [`0xeed6b6...2500ef`](https://testnet.bscscan.com/tx/0xeed6b6541031012209d9318fad7851db395304f1e2a2978ae3a98f91b02500ef) |
+| 6 | Escalation | Risk Snapshot (overall: 38/100) | MEDIUM | — | [`0x60e7f3...41ddf4`](https://testnet.bscscan.com/tx/0x60e7f39ebc63a4e585684f1d0fe21ab22d52a14700aa5e4ead21fc766441ddf4) |
+| 7 | **Threat** | **Abnormal Volume (+350%, whale selling)** | **HIGH** | **88%** | [`0x8e8e1f...7d97d`](https://testnet.bscscan.com/tx/0x8e8e1f31f29ab36d60d3cec4be03db00919abbded5ed54e48702d5658ba7d97d) |
+| 8 | Defense | Risk Profile → Aggressive (0.3% slip, 5% SL) | — | — | [`0x7b7546...0b6021`](https://testnet.bscscan.com/tx/0x7b7546b846181312fde544b2f89ee8e7e53ffd0002bada657a8c10848e0b6021) |
+| 9 | Defense | Risk Snapshot (overall: 68/100) | HIGH | — | [`0x2a8c0b...c402d3`](https://testnet.bscscan.com/tx/0x2a8c0b20cedebb1af168b5545f46911d79b98feeaa05d0e4e647055eb8c402d3) |
+| 10 | **Protection** | **Stop-Loss Triggered (-15.3%, liquidity -28%)** | **CRITICAL** | **95%** | [`0xea98d4...28ae11`](https://testnet.bscscan.com/tx/0xea98d417b4ae7aaf6d568f85bf2ba6fa1cb1b1ee5c30f08d59959aa69228ae11) |
+| 11 | Recovery | Market Stabilized, Recovery Detected | LOW | 91% | [`0xbbc362...d4912c`](https://testnet.bscscan.com/tx/0xbbc362118ad2040c44b6a680bc789a6b82f52227bb0a82f4511d525f69d4912c) |
+| 12 | Recovery | Risk Snapshot Normalized (overall: 18/100) | LOW | — | [`0x530f57...5b3eb6`](https://testnet.bscscan.com/tx/0x530f57e3d88c15d34fc5e57f3bf3788f0eeceec5df82ab7c2243baa4565b3eb6) |
+| 13 | Review | Position Review + AI Assessment | NONE | 98% | [`0x226c18...fdfbab`](https://testnet.bscscan.com/tx/0x226c18891d7b6edfba75cde1701dc807b9cd42d6c697309b72ac524754fdfbab) |
 
 Each decision includes a **keccak256 hash of the AI reasoning text** stored immutably on-chain.
 
@@ -272,17 +270,19 @@ aegis-protocol/
 ├── frontend/                            # Next.js 14 Dashboard (Vercel-deployed)
 │   └── src/
 │       ├── app/
-│       │   ├── page.tsx                 # Dashboard with AI display + on-chain data
+│       │   ├── page.tsx                 # Dashboard with live data + AI display + on-chain data
 │       │   ├── layout.tsx               # Dark cyberpunk theme
 │       │   └── globals.css              # Glassmorphism CSS
 │       └── lib/
 │           ├── constants.ts             # Contract addresses & chain config
+│           ├── useLiveMarket.ts         # 🔴 LIVE CoinGecko + PancakeSwap price hook
 │           ├── useWallet.ts             # MetaMask wallet hook
 │           ├── useContracts.ts          # Contract read/write hooks (+ public RPC)
 │           └── abis.ts                  # Full contract ABIs
 │
 ├── hardhat.config.ts                    # BSC Testnet + Sourcify verification
 ├── deployment.json                      # Deployed contract addresses
+├── AI_BUILD_LOG.md                      # 🤖 Detailed AI usage documentation
 └── README.md
 ```
 
@@ -422,7 +422,7 @@ struct RiskProfile {
 | **Live Data** | CoinGecko (price/volume), DeFiLlama (TVL/liquidity) |
 | **Frontend** | Next.js 14, Tailwind CSS, ethers.js v6, Vercel |
 | **Blockchain** | BNB Smart Chain (BSC Testnet), Sourcify verification |
-| **Testing** | Hardhat + Chai (54 tests) + 15-phase on-chain demo |
+| **Testing** | Hardhat + Chai (54 tests) + 13-phase on-chain demo |
 
 ---
 
@@ -442,12 +442,14 @@ struct RiskProfile {
 
 **Live at: [aegis-protocol-1.vercel.app](https://aegis-protocol-1.vercel.app/)**
 
+- **Live market data**: Real-time BNB price from CoinGecko + PancakeSwap V2 on-chain price, auto-refreshing every 30s
+- **Price oracle cross-verification**: Shows live delta between API and DEX prices with status indicators
 - **No-wallet mode**: Reads on-chain data via public BSC RPC (no MetaMask required)
 - **Wallet mode**: Full interaction — deposit, authorize agent, set risk profile, withdraw
-- **AI Analysis display**: Real-time AI reasoning, market sentiment, risk scores
-- **PancakeSwap data**: DEX price comparison and oracle health monitoring
-- **Auto-refresh**: 30-second polling of on-chain state
-- **Contract verification**: BSCScan links, Sourcify badges, transaction evidence
+- **AI Analysis display**: Real-time AI reasoning driven by live market data, sentiment, risk scores
+- **13 TX evidence table**: Every transaction clickable with BSCScan links
+- **Auto-refresh**: 30-second polling of on-chain state + market data
+- **Contract verification**: BSCScan links, Sourcify badges
 
 ---
 
@@ -462,11 +464,12 @@ Built with AI assistance as encouraged by the hackathon:
 5. **LLM AI Engine** — Groq/OpenAI integration for natural language threat analysis (381 LOC)
 6. **PancakeSwap Integration** — On-chain DEX price feeds for oracle cross-verification (300 LOC)
 7. **CoinGecko + DeFiLlama** — Real-time market data with graceful fallback
-8. **15-Phase On-Chain Demo** — Full threat lifecycle executed on BSC Testnet
+8. **13-Phase On-Chain Demo** — Full threat lifecycle executed on BSC Testnet with clickable TX hashes
 9. **Next.js Dashboard** — Cyberpunk glassmorphism UI with live contract hooks
 10. **Brutal Self-Audit** — Identified and fixed 6 critical weaknesses mid-hackathon
-11. **BSC Testnet Deployment** — 3 contracts verified via Sourcify, 15 confirmed transactions
+11. **BSC Testnet Deployment** — 3 contracts verified via Sourcify, 13 confirmed transactions with clickable TX hashes
 12. **Vercel Deployment** — Live dashboard with public RPC reads (no wallet needed)
+13. **AI Build Log** — Comprehensive documentation of AI usage throughout development (see [AI_BUILD_LOG.md](./AI_BUILD_LOG.md))
 
 ---
 
