@@ -5,6 +5,7 @@ import { useWallet } from "../lib/useWallet";
 import { useContractData, useContractWrite, usePublicContractData } from "../lib/useContracts";
 import { RISK_LEVELS, RISK_COLORS, AGENT_TIERS, CONTRACTS } from "../lib/constants";
 import { useLiveMarketData } from "../lib/useLiveMarket";
+import AgentSimulation from "../components/AgentSimulation";
 import toast from "react-hot-toast";
 import {
   Shield,
@@ -509,6 +510,20 @@ export default function Home() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ═══ LIVE AGENT SIMULATION ═══ */}
+      <section className="px-4 pb-20">
+        <div className="max-w-6xl mx-auto">
+          <h3 className="text-3xl font-bold text-center mb-4">
+            <span className="text-[#00e0ff]">Live</span> Agent Simulation
+          </h3>
+          <p className="text-center text-gray-400 mb-10 max-w-2xl mx-auto">
+            Watch the Aegis guardian execute a complete 6-phase decision cycle using real market data. 
+            This is the same loop that runs autonomously every 30 seconds to protect your DeFi positions.
+          </p>
+          <AgentSimulation market={liveMarket} />
         </div>
       </section>
 
