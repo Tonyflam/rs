@@ -303,6 +303,14 @@ Each phase creates real on-chain transactions with:
 - PancakeSwap DEX cross-verification display
 - 13-transaction evidence table with phase labels and risk color coding
 - Contract cards with BSCScan + Sourcify verification links
+- **Interactive Agent Simulation** (AgentSimulation.tsx, 518 LOC):
+  - Visual 6-phase agent cycle (OBSERVE → ANALYZE → AI REASON → DEX VERIFY → DECIDE → EXECUTE)
+  - Animated phase timeline with active/complete indicators and glow effects
+  - Terminal-style output with typewriter text animation showing real commands
+  - Dual-panel layout: phase output terminal + running agent log
+  - Uses live CoinGecko + PancakeSwap market data to drive risk calculations
+  - Dynamically generates LLM reasoning text, risk scores, and oracle cross-verification
+  - Shows judges exactly how the autonomous agent works — the most visual feature of the project
 
 **Key Design Decision (AI-Suggested):**
 The dashboard works **without a wallet** by reading on-chain data through a public BSC RPC endpoint. This means judges can see real contract data immediately without installing MetaMask or getting testnet BNB.
@@ -337,7 +345,7 @@ AI analyzed competitor submissions across all hackathon tracks:
 | **Smart Contract LOC** | 1,326 (3 contracts) |
 | **AI Engine LOC** | 681 (ai-engine.ts + pancakeswap.ts) |
 | **Agent Core LOC** | 741+ (index.ts + analyzer.ts) |
-| **Frontend LOC** | 1,016 (page.tsx) |
+| **Frontend LOC** | 1,534 (page.tsx + AgentSimulation.tsx + useLiveMarket.ts) |
 | **Test LOC** | ~800 (54 tests across 3 files) |
 | **Scripts LOC** | ~600 (4 scripts) |
 | **AI Iterations** | 50+ revision cycles |

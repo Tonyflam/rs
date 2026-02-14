@@ -271,8 +271,10 @@ aegis-protocol/
 │   └── src/
 │       ├── app/
 │       │   ├── page.tsx                 # Dashboard with live data + AI display + on-chain data
-│       │   ├── layout.tsx               # Dark cyberpunk theme
-│       │   └── globals.css              # Glassmorphism CSS
+│       │   ├── layout.tsx               # OG meta tags, dark cyberpunk theme
+│       │   └── globals.css              # Glassmorphism + animation CSS
+│       ├── components/
+│       │   └── AgentSimulation.tsx       # 🎮 Interactive 6-phase agent simulation (518 LOC)
 │       └── lib/
 │           ├── constants.ts             # Contract addresses & chain config
 │           ├── useLiveMarket.ts         # 🔴 LIVE CoinGecko + PancakeSwap price hook
@@ -442,6 +444,7 @@ struct RiskProfile {
 
 **Live at: [aegis-protocol-1.vercel.app](https://aegis-protocol-1.vercel.app/)**
 
+- **🎮 Interactive Agent Simulation**: Click "Run Agent Cycle" to watch Aegis execute a full 6-phase guardian loop (OBSERVE → ANALYZE → AI REASON → DEX VERIFY → DECIDE → EXECUTE) with animated phase timeline, typewriter terminal output, and real market data — see exactly how the AI agent works
 - **Live market data**: Real-time BNB price from CoinGecko + PancakeSwap V2 on-chain price, auto-refreshing every 30s
 - **Price oracle cross-verification**: Shows live delta between API and DEX prices with status indicators
 - **No-wallet mode**: Reads on-chain data via public BSC RPC (no MetaMask required)
@@ -469,7 +472,8 @@ Built with AI assistance as encouraged by the hackathon:
 10. **Brutal Self-Audit** — Identified and fixed 6 critical weaknesses mid-hackathon
 11. **BSC Testnet Deployment** — 3 contracts verified via Sourcify, 13 confirmed transactions with clickable TX hashes
 12. **Vercel Deployment** — Live dashboard with public RPC reads (no wallet needed)
-13. **AI Build Log** — Comprehensive documentation of AI usage throughout development (see [AI_BUILD_LOG.md](./AI_BUILD_LOG.md))
+13. **Interactive Agent Simulation** — Visual 6-phase agent loop with typewriter terminal, animated timeline, and live market data
+14. **AI Build Log** — Comprehensive documentation of AI usage throughout development (see [AI_BUILD_LOG.md](./AI_BUILD_LOG.md))
 
 ---
 

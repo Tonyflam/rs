@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://aegis-protocol-1.vercel.app"),
   title: "Aegis Protocol — AI-Powered DeFi Guardian on BNB Chain",
   description:
     "Autonomous AI agent that monitors your DeFi positions on BNB Chain 24/7, detects risks in real-time using LLM reasoning + PancakeSwap DEX verification, and executes protective on-chain transactions.",
@@ -15,11 +16,16 @@ export const metadata: Metadata = {
     siteName: "Aegis Protocol",
     type: "website",
     locale: "en_US",
+    images: [{ url: "/og-image.svg", width: 1200, height: 630, alt: "Aegis Protocol — AI-Powered DeFi Guardian" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Aegis Protocol — AI-Powered DeFi Guardian",
     description: "Autonomous AI agent protecting your DeFi positions on BNB Chain 24/7. LLM reasoning + PancakeSwap DEX verification.",
+    images: ["/og-image.svg"],
+  },
+  icons: {
+    icon: "/favicon.svg",
   },
   robots: {
     index: true,
@@ -35,7 +41,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
         <meta name="theme-color" content="#0a0e17" />
       </head>
       <body className="bg-[#0a0e17] text-white antialiased min-h-screen">

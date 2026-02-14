@@ -28,6 +28,51 @@ const CONFIG = {
 
 // ─── ASCII Banner ─────────────────────────────────────────────
 
+// ─── Config Validation ────────────────────────────────────────
+function validateConfig(): void {
+  const errors: string[] = [];
+  
+  if (!CONFIG.privateKey) {
+    errors.push("PRIVATE_KEY is required (set in .env or environment)");
+  } else if (!/^[0-9a-fA-F]{64}$/.test(CONFIG.privateKey)) {
+    errors.push("PRIVATE_KEY must be a 64-character hex string (without 0x prefix)");
+  }
+
+  if (CONFIG.vaultAddress && !ethers.isAddress(CONFIG.vaultAddress)) {
+    errors.push(`VAULT_ADDRESS is not a valid address: ${CONFIG.vaultAddress}`);
+  }
+  if (CONFIG.registryAddress && !ethers.isAddress(CONFIG.registryAddress)) {
+    errors.push(`REGISTRY_ADDRESS is not a valid address: ${CONFIG.registryAddress}`);
+  }
+  if (CONFIG.loggerAddress && !ethers.isAddress(CONFIG.loggerAddress)) {
+    errors.push(`LOGGER_ADDRESS is not a valid address: ${CONFIG.loggerAddress}`);
+  }
+
+  if (CONFIG.pollInterval < 5000) {
+    errors.push("POLL_INTERVAL must be at least 5000ms (5 seconds)");
+  }
+
+  if (errors.length > 0) {
+    console.error("\n❌ Configuration errors:");
+    errors.forEach((e) => console.error(`   • ${e}`));
+    console.error("\n   See .env.example for required variables.\n");
+    process.exit(1);
+  }
+
+  // Warnings (non-fatal)
+  if (!CONFIG.vaultAddress || !CONFIG.registryAddress || !CONFIG.loggerAddress) {
+    console.warn("⚠  Missing contract addresses — agent will run in monitor-only mode");
+  }
+  if (CONFIG.dryRun) {
+    console.warn("⚠  DRY_RUN=true — no on-chain transactions will be executed");
+  }
+  if (!process.env.GROQ_API_KEY && !process.env.OPENAI_API_KEY) {
+    console.warn("⚠  No AI API key configured — using heuristic fallback only");
+  }
+}
+
+// ─── ASCII Banner (cont.) ─────────────────────────────────────
+
 function printBanner(): void {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
@@ -270,6 +315,7 @@ class AegisAgent {
 // ─── Entry Point ──────────────────────────────────────────────
 
 async function main(): Promise<void> {
+  validateConfig();
   const agent = new AegisAgent();
 
   // Graceful shutdown
