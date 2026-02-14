@@ -13,7 +13,7 @@
 
 *An autonomous AI agent — powered by LLM reasoning (Groq/OpenAI) + PancakeSwap on-chain data — that monitors your DeFi positions on BNB Chain 24/7, detects risks in real-time, and executes protective on-chain transactions before you lose money.*
 
-**🌐 [Live Dashboard](https://aegis-protocol-1.vercel.app/) · 📜 [Verified Contracts](https://testnet.bscscan.com/address/0xac77139C2856788b7EEff767969353adF95D335e) · 🧪 [13 On-Chain TXs](#-on-chain-proof-13-verified-transactions) · 🤖 [AI Build Log](./AI_BUILD_LOG.md)**
+**🌐 [Live Dashboard](https://aegis-protocol-1.vercel.app/) · � [Demo Video](https://youtu.be/zEeFEduh6eg) · �📜 [Verified Contracts](https://testnet.bscscan.com/address/0xac77139C2856788b7EEff767969353adF95D335e) · 🧪 [13 On-Chain TXs](#-on-chain-proof-13-verified-transactions) · 🤖 [AI Build Log](./AI_BUILD_LOG.md)**
 
 [Architecture](#-architecture) · [AI Engine](#-ai-reasoning-engine-llm-powered) · [On-Chain Proof](#-on-chain-proof-13-verified-transactions) · [Smart Contracts](#%EF%B8%8F-smart-contracts) · [Quick Start](#-quick-start) · [AI Build Log](./AI_BUILD_LOG.md)
 
