@@ -25,36 +25,19 @@ import {
   Cpu,
 } from "lucide-react";
 
-// ─── Mock Data (used when contracts not deployed) ─────────────
-const MOCK_STATS = {
-  totalValueProtected: "2,847.5",
-  activeAgents: 12,
-  threatsDetected: 47,
-  protectionRate: "99.7",
-  totalDecisions: 1284,
-  totalDeposited: "156.8",
+// ─── Fallback Data (displayed only when BSC Testnet RPC is unreachable) ─────
+const FALLBACK_STATS = {
+  totalValueProtected: "0",
+  activeAgents: 0,
+  threatsDetected: 0,
+  protectionRate: "0",
+  totalDecisions: 0,
+  totalDeposited: "0",
 };
 
-function timeAgo(minutes: number): string {
-  if (minutes < 60) return `${minutes} min ago`;
-  if (minutes < 1440) return `${Math.floor(minutes / 60)} hr ago`;
-  return `${Math.floor(minutes / 1440)}d ago`;
-}
+// No mock decisions — only real on-chain data or empty state
 
-const MOCK_DECISIONS = [
-  { id: 1, agent: "Guardian Alpha", type: "ThreatDetected", risk: 4, confidence: 97.2, user: "0x7a3...f91", time: timeAgo(2), action: true },
-  { id: 2, agent: "Guardian Alpha", type: "RiskAssessment", risk: 1, confidence: 89.5, user: "0xb4e...2c8", time: timeAgo(8), action: false },
-  { id: 3, agent: "Guardian Alpha", type: "ProtectionTriggered", risk: 3, confidence: 94.1, user: "0x3d1...a47", time: timeAgo(15), action: true },
-  { id: 4, agent: "Guardian Alpha", type: "AllClear", risk: 0, confidence: 99.8, user: "0x9f2...b63", time: timeAgo(22), action: false },
-  { id: 5, agent: "Guardian Alpha", type: "MarketAnalysis", risk: 2, confidence: 86.3, user: "0x1e5...d94", time: timeAgo(35), action: false },
-];
-
-const MOCK_POSITIONS = [
-  { user: "0x7a3...f91", balance: "12.5 BNB", risk: 1, agent: "Guardian Alpha", lastAction: timeAgo(5) },
-  { user: "0xb4e...2c8", balance: "8.2 BNB", risk: 0, agent: "Guardian Alpha", lastAction: timeAgo(62) },
-  { user: "0x3d1...a47", balance: "45.0 BNB", risk: 2, agent: "Guardian Alpha", lastAction: timeAgo(15) },
-  { user: "0x9f2...b63", balance: "3.7 BNB", risk: 0, agent: "Guardian Alpha", lastAction: timeAgo(130) },
-];
+// No mock positions — only show real user data when wallet connected
 
 const DECISION_TYPES = ["Risk Assessment", "Threat Detected", "Protection Triggered", "All Clear", "Market Analysis", "Position Review"];
 
@@ -120,15 +103,15 @@ export default function Home() {
     }
   };
 
-  // Merged stats: use live wallet data > public on-chain data > mock
+  // Merged stats: wallet data > public on-chain data > fallback zeros
   const stats = {
-    totalValueProtected: contractData.vaultStats?.totalValueProtected ?? (publicData.isLive ? publicData.totalValueProtected : MOCK_STATS.totalValueProtected),
-    activeAgents: contractData.agentCount || publicData.agentCount || MOCK_STATS.activeAgents,
-    threatsDetected: contractData.loggerStats?.totalThreats ?? (publicData.isLive ? publicData.totalThreats : MOCK_STATS.threatsDetected),
-    protectionRate: contractData.successRate > 0 ? contractData.successRate.toFixed(1) : MOCK_STATS.protectionRate,
-    totalDecisions: contractData.loggerStats?.totalDecisions ?? (publicData.isLive ? publicData.totalDecisions : MOCK_STATS.totalDecisions),
-    totalDeposited: contractData.vaultStats?.totalBnbDeposited ?? (publicData.isLive ? publicData.totalDeposited : MOCK_STATS.totalDeposited),
-    actionsExecuted: contractData.vaultStats?.totalActionsExecuted ?? 47,
+    totalValueProtected: contractData.vaultStats?.totalValueProtected ?? (publicData.isLive ? publicData.totalValueProtected : FALLBACK_STATS.totalValueProtected),
+    activeAgents: contractData.agentCount || publicData.agentCount || FALLBACK_STATS.activeAgents,
+    threatsDetected: contractData.loggerStats?.totalThreats ?? (publicData.isLive ? publicData.totalThreats : FALLBACK_STATS.threatsDetected),
+    protectionRate: contractData.successRate > 0 ? contractData.successRate.toFixed(1) : publicData.isLive && publicData.agentSuccessRate > 0 ? publicData.agentSuccessRate.toFixed(1) : FALLBACK_STATS.protectionRate,
+    totalDecisions: contractData.loggerStats?.totalDecisions ?? (publicData.isLive ? publicData.totalDecisions : FALLBACK_STATS.totalDecisions),
+    totalDeposited: contractData.vaultStats?.totalBnbDeposited ?? (publicData.isLive ? publicData.totalDeposited : FALLBACK_STATS.totalDeposited),
+    actionsExecuted: contractData.vaultStats?.totalActionsExecuted ?? (publicData.isLive ? publicData.totalActionsExecuted : 0),
   };
 
   const dataSource = contractData.isLive ? "wallet" : publicData.isLive ? "public-rpc" : "demo";
@@ -307,7 +290,7 @@ export default function Home() {
           {activeTab === "overview" && (
             <OverviewTab stats={stats} 
               decisions={contractData.decisions.length > 0 ? contractData.decisions : publicData.recentDecisions} 
-              riskSnapshot={contractData.riskSnapshot} 
+              riskSnapshot={contractData.riskSnapshot ?? publicData.publicRiskSnapshot} 
               isLive={contractData.isLive || publicData.isLive} />
           )}
           {activeTab === "decisions" && (
@@ -322,8 +305,9 @@ export default function Home() {
               isLive={contractData.isLive} isDeployed={contractData.isDeployed} />
           )}
           {activeTab === "agent" && (
-            <AgentTab agentInfo={contractData.agentInfo} reputation={contractData.reputation || publicData.agentReputation} 
-              successRate={contractData.successRate} isLive={contractData.isLive || publicData.isLive} />
+            <AgentTab agentInfo={contractData.agentInfo} publicData={publicData}
+              reputation={contractData.reputation || publicData.agentReputation} 
+              successRate={contractData.successRate || publicData.agentSuccessRate} isLive={contractData.isLive || publicData.isLive} />
           )}
         </div>
       </section>
@@ -370,12 +354,12 @@ export default function Home() {
             <div className="glass-card glow-border p-6" style={{ borderRadius: "16px" }}>
               <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-[#a855f7]" />
-                LLM-Powered Analysis
-                <span className="ml-auto text-xs px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20">Groq / OpenAI</span>
+                AI Analysis Engine
+                <span className="ml-auto text-xs px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20">{liveMarket.bnbPriceCoinGecko > 0 ? "Live Data" : "Offline"}</span>
               </h4>
               <div className="space-y-4">
                 <div className="p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.3)" }}>
-                  <p className="text-xs text-purple-400 font-mono mb-2">AI Market Analysis — {liveMarket.bnbPriceCoinGecko > 0 ? "Live Data" : "Example Output"}</p>
+                  <p className="text-xs text-purple-400 font-mono mb-2">Heuristic Risk Analysis — {liveMarket.bnbPriceCoinGecko > 0 ? "Live Market Feed" : "Example Output"}</p>
                   <p className="text-sm text-gray-300 leading-relaxed italic">
                     {liveMarket.bnbPriceCoinGecko > 0 
                       ? `"BNB trading at $${liveMarket.bnbPriceCoinGecko.toFixed(2)} with ${liveMarket.priceChange24h >= 0 ? "+" : ""}${liveMarket.priceChange24h.toFixed(2)}% 24h movement. Volume at $${(liveMarket.volume24h / 1e9).toFixed(2)}B. BSC ecosystem TVL at $${(liveMarket.bscTvl / 1e9).toFixed(2)}B. Oracle cross-check delta: ${liveMarket.priceDelta.toFixed(3)}%. ${liveMarket.priceDelta < 1 ? "No oracle manipulation detected. All metrics within normal parameters." : "WARNING: Price divergence detected between sources."}"` 
@@ -398,7 +382,7 @@ export default function Home() {
                   </div>
                   <div className="p-3 rounded-lg" style={{ background: "rgba(0,224,255,0.08)", border: "1px solid rgba(0,224,255,0.15)" }}>
                     <p className="text-xs text-gray-500">Confidence</p>
-                    <p className="text-sm font-semibold text-[#00e0ff]">{liveMarket.bnbPriceCoinGecko > 0 ? "94" : "92"}%</p>
+                    <p className="text-sm font-semibold text-[#00e0ff]">{liveMarket.bnbPriceCoinGecko > 0 ? Math.max(60, Math.round(100 - Math.abs(liveMarket.priceChange24h) * 2 - liveMarket.priceDelta * 10)) : "—"}%</p>
                   </div>
                   <div className="p-3 rounded-lg" style={{ background: `rgba(${liveMarket.priceDelta > 1 ? "239,68,68" : "34,197,94"},0.08)`, border: `1px solid rgba(${liveMarket.priceDelta > 1 ? "239,68,68" : "34,197,94"},0.15)` }}>
                     <p className="text-xs text-gray-500">Threats</p>
@@ -717,26 +701,19 @@ function OverviewTab({ stats, decisions, riskSnapshot, isLive }: OverviewProps) 
     { label: "Protocol Risk", value: riskSnapshot.protocolRisk, color: riskSnapshot.protocolRisk > 50 ? "#ef4444" : "#22c55e" },
     { label: "Smart Contract Risk", value: riskSnapshot.smartContractRisk, color: riskSnapshot.smartContractRisk > 30 ? "#eab308" : "#22c55e" },
   ] : [
-    { label: "Liquidation Risk", value: 12, color: "#22c55e" },
-    { label: "Volatility", value: 45, color: "#eab308" },
-    { label: "Protocol Risk", value: 8, color: "#22c55e" },
-    { label: "Smart Contract Risk", value: 15, color: "#22c55e" },
+    { label: "Liquidation Risk", value: 0, color: "#6b7280" },
+    { label: "Volatility", value: 0, color: "#6b7280" },
+    { label: "Protocol Risk", value: 0, color: "#6b7280" },
+    { label: "Smart Contract Risk", value: 0, color: "#6b7280" },
   ];
 
-  const displayDecisions = decisions.length > 0 ? decisions.slice(0, 4).map((d, i) => ({
+  const displayDecisions = decisions.slice(0, 4).map((d, i) => ({
     id: i + 1,
     type: DECISION_TYPES[d.decisionType] || "Unknown",
     risk: d.riskLevel,
     user: `${d.targetUser.slice(0, 5)}...${d.targetUser.slice(-3)}`,
     time: new Date(d.timestamp * 1000).toLocaleTimeString(),
     action: d.actionTaken,
-  })) : MOCK_DECISIONS.slice(0, 4).map(d => ({
-    id: d.id,
-    type: d.type.replace(/([A-Z])/g, " $1").trim(),
-    risk: d.risk,
-    user: d.user,
-    time: d.time,
-    action: d.action,
   }));
 
   return (
@@ -768,7 +745,7 @@ function OverviewTab({ stats, decisions, riskSnapshot, isLive }: OverviewProps) 
           Recent Activity
         </h4>
         <div className="space-y-3">
-          {displayDecisions.map((d) => (
+          {displayDecisions.length > 0 ? displayDecisions.map((d) => (
             <div key={d.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${RISK_COLORS[d.risk]}15` }}>
                 {d.risk >= 3 ? <AlertTriangle className="w-4 h-4" style={{ color: RISK_COLORS[d.risk] }} /> : <CheckCircle className="w-4 h-4" style={{ color: RISK_COLORS[d.risk] }} />}
@@ -781,7 +758,12 @@ function OverviewTab({ stats, decisions, riskSnapshot, isLive }: OverviewProps) 
                 {RISK_LEVELS[d.risk]}
               </span>
             </div>
-          ))}
+          )) : (
+            <div className="text-center py-6 text-gray-500 text-sm">
+              <Activity className="w-8 h-8 mx-auto mb-2 text-gray-600" />
+              {isLive ? "No decisions logged yet on-chain." : "Connecting to BSC Testnet..."}
+            </div>
+          )}
         </div>
       </div>
 
@@ -815,13 +797,10 @@ function DecisionsTab({ decisions, agentName, isLive }: {
   agentName: string;
   isLive: boolean;
 }) {
-  const displayDecisions = decisions.length > 0 ? decisions.map((d, i) => ({
+  const displayDecisions = decisions.map((d, i) => ({
     id: i + 1, agent: agentName, type: DECISION_TYPES[d.decisionType] || "Unknown", risk: d.riskLevel,
     confidence: d.confidence, user: `${d.targetUser.slice(0, 5)}...${d.targetUser.slice(-3)}`,
     time: new Date(d.timestamp * 1000).toLocaleString(), action: d.actionTaken,
-  })) : MOCK_DECISIONS.map(d => ({
-    id: d.id, agent: d.agent, type: d.type.replace(/([A-Z])/g, " $1").trim(),
-    risk: d.risk, confidence: d.confidence, user: d.user, time: d.time, action: d.action,
   }));
 
   return (
@@ -849,7 +828,7 @@ function DecisionsTab({ decisions, agentName, isLive }: {
             </tr>
           </thead>
           <tbody>
-            {displayDecisions.map((d) => (
+            {displayDecisions.length > 0 ? displayDecisions.map((d) => (
               <tr key={d.id} className="border-b hover:bg-white/[0.02] transition-colors" style={{ borderColor: "rgba(0,224,255,0.03)" }}>
                 <td className="px-6 py-4 text-sm font-mono text-gray-400">#{d.id}</td>
                 <td className="px-6 py-4 text-sm">{d.agent}</td>
@@ -863,7 +842,11 @@ function DecisionsTab({ decisions, agentName, isLive }: {
                     : <span className="text-sm text-gray-500">Monitor</span>}
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr><td colSpan={8} className="px-6 py-8 text-center text-gray-500 text-sm">
+                {isLive ? "No decisions logged on-chain yet. Run the agent to generate real AI decisions." : "Connecting to BSC Testnet RPC..."}
+              </td></tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -933,30 +916,11 @@ function PositionsTab({ userPosition, isConnected, depositAmount, setDepositAmou
         <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Eye className="w-5 h-5 text-[#00e0ff]" /> Protected Positions
         </h4>
-        <div className="grid gap-4">
-          {MOCK_POSITIONS.map((pos, i) => (
-            <div key={i} className="flex items-center justify-between p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.2)" }}>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${RISK_COLORS[pos.risk]}15` }}>
-                  <Wallet className="w-5 h-5" style={{ color: RISK_COLORS[pos.risk] }} />
-                </div>
-                <div>
-                  <p className="font-mono text-sm">{pos.user}</p>
-                  <p className="text-xs text-gray-500">Last action: {pos.lastAction}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="text-right">
-                  <p className="text-sm font-semibold">{pos.balance}</p>
-                  <p className="text-xs text-gray-500">Deposited</p>
-                </div>
-                <span className="text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: `${RISK_COLORS[pos.risk]}15`, color: RISK_COLORS[pos.risk] }}>
-                  {RISK_LEVELS[pos.risk]}
-                </span>
-                <span className="text-xs text-gray-400 flex items-center gap-1"><Bot className="w-3 h-3" /> {pos.agent}</span>
-              </div>
-            </div>
-          ))}
+        <div className="text-center py-8">
+          <Shield className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">
+            {isConnected ? "No protected positions yet. Deposit BNB and authorize an agent to start." : "Connect wallet to view and manage positions."}
+          </p>
         </div>
       </div>
 
@@ -974,16 +938,26 @@ function PositionsTab({ userPosition, isConnected, depositAmount, setDepositAmou
 }
 
 // ─── TAB: Agent Info ──────────────────────────────────────────
-function AgentTab({ agentInfo, reputation, successRate, isLive }: {
+function AgentTab({ agentInfo, publicData, reputation, successRate, isLive }: {
   agentInfo: { name: string; operator: string; tier: number; totalDecisions: number; successfulActions: number; totalValueProtected: string; registeredAt: number } | null;
+  publicData: { agentName: string; agentTier: number; agentOperator: string; agentTotalDecisions: number; agentSuccessfulActions: number; agentTotalValueProtected: string; agentRegisteredAt: number; isLive: boolean };
   reputation: number; successRate: number; isLive: boolean;
 }) {
-  const agent = agentInfo ?? {
-    name: "Guardian Alpha", operator: "0x7a3...f91", tier: 3, totalDecisions: 1284,
-    successfulActions: 47, totalValueProtected: "2,847.5", registeredAt: Math.floor(Date.now() / 1000) - 86400,
-  };
-  const displayReputation = reputation > 0 ? reputation.toFixed(2) : "4.80";
-  const displaySuccessRate = successRate > 0 ? `${successRate.toFixed(1)}%` : "99.7%";
+  // Use wallet data > public RPC data > zeros (never fake inflated values)
+  const agent = agentInfo ?? (publicData.isLive ? {
+    name: publicData.agentName || "Agent #0",
+    operator: publicData.agentOperator || "—",
+    tier: publicData.agentTier,
+    totalDecisions: publicData.agentTotalDecisions,
+    successfulActions: publicData.agentSuccessfulActions,
+    totalValueProtected: publicData.agentTotalValueProtected,
+    registeredAt: publicData.agentRegisteredAt,
+  } : {
+    name: "Agent #0", operator: "—", tier: 0, totalDecisions: 0,
+    successfulActions: 0, totalValueProtected: "0", registeredAt: 0,
+  });
+  const displayReputation = reputation > 0 ? reputation.toFixed(2) : "0.00";
+  const displaySuccessRate = successRate > 0 ? `${successRate.toFixed(1)}%` : "0%";
 
   return (
     <div className="grid md:grid-cols-2 gap-6">

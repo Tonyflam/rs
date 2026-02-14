@@ -237,10 +237,18 @@ export function usePublicContractData() {
   const [totalProtections, setTotalProtections] = useState<number>(0);
   const [totalDeposited, setTotalDeposited] = useState<string>("0");
   const [totalValueProtected, setTotalValueProtected] = useState<string>("0");
+  const [totalActionsExecuted, setTotalActionsExecuted] = useState<number>(0);
   const [agentName, setAgentName] = useState<string>("");
   const [agentTier, setAgentTier] = useState<number>(0);
+  const [agentOperator, setAgentOperator] = useState<string>("");
+  const [agentTotalDecisions, setAgentTotalDecisions] = useState<number>(0);
+  const [agentSuccessfulActions, setAgentSuccessfulActions] = useState<number>(0);
+  const [agentTotalValueProtected, setAgentTotalValueProtected] = useState<string>("0");
+  const [agentRegisteredAt, setAgentRegisteredAt] = useState<number>(0);
   const [agentReputation, setAgentReputation] = useState<number>(0);
+  const [agentSuccessRate, setAgentSuccessRate] = useState<number>(0);
   const [recentDecisions, setRecentDecisions] = useState<Decision[]>([]);
+  const [publicRiskSnapshot, setPublicRiskSnapshot] = useState<RiskSnapshot | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [isLive, setIsLive] = useState(false);
 
@@ -254,13 +262,18 @@ export function usePublicContractData() {
       const vault = new ethers.Contract(CONTRACTS.VAULT, VAULT_ABI, rpc);
       const logger = new ethers.Contract(CONTRACTS.DECISION_LOGGER, LOGGER_ABI, rpc);
 
+      // Deployer address — used for public risk snapshot reads
+      const DEPLOYER = "0xA3eAFfed353EF86c08919552Fd4F7cCB061192d3";
+
       const results = await Promise.allSettled([
         registry.getAgentCount(),
         registry.getAgent(0),
         registry.getReputationScore(0),
+        registry.getSuccessRate(0),
         vault.getVaultStats(),
         logger.getStats(),
         logger.getRecentDecisions(10),
+        logger.getLatestRisk(DEPLOYER),
       ]);
 
       if (results[0].status === "fulfilled") setAgentCount(Number(results[0].value));
@@ -268,21 +281,28 @@ export function usePublicContractData() {
         const a = results[1].value;
         setAgentName(a.name);
         setAgentTier(Number(a.tier));
+        setAgentOperator(a.operator);
+        setAgentTotalDecisions(Number(a.totalDecisions));
+        setAgentSuccessfulActions(Number(a.successfulActions));
+        setAgentTotalValueProtected(ethers.formatEther(a.totalValueProtected));
+        setAgentRegisteredAt(Number(a.registeredAt));
       }
       if (results[2].status === "fulfilled") setAgentReputation(Number(results[2].value) / 100);
-      if (results[3].status === "fulfilled") {
-        const v = results[3].value;
+      if (results[3].status === "fulfilled") setAgentSuccessRate(Number(results[3].value) / 100);
+      if (results[4].status === "fulfilled") {
+        const v = results[4].value;
         setTotalDeposited(ethers.formatEther(v[0]));
+        setTotalActionsExecuted(Number(v[1]));
         setTotalValueProtected(ethers.formatEther(v[2]));
       }
-      if (results[4].status === "fulfilled") {
-        const s = results[4].value;
+      if (results[5].status === "fulfilled") {
+        const s = results[5].value;
         setTotalDecisions(Number(s[0]));
         setTotalThreats(Number(s[1]));
         setTotalProtections(Number(s[2]));
       }
-      if (results[5].status === "fulfilled") {
-        const raw = results[5].value as any[];
+      if (results[6].status === "fulfilled") {
+        const raw = results[6].value as any[];
         setRecentDecisions(raw.map((d: any) => ({
           agentId: Number(d.agentId),
           targetUser: d.targetUser,
@@ -292,6 +312,18 @@ export function usePublicContractData() {
           timestamp: Number(d.timestamp),
           actionTaken: d.actionTaken,
         })));
+      }
+      if (results[7].status === "fulfilled" && results[7].value) {
+        const r = results[7].value;
+        if (Number(r.timestamp) > 0) {
+          setPublicRiskSnapshot({
+            overallRisk: Number(r.overallRisk),
+            liquidationRisk: Number(r.liquidationRisk) / 100,
+            volatilityScore: Number(r.volatilityScore) / 100,
+            protocolRisk: Number(r.protocolRisk) / 100,
+            smartContractRisk: Number(r.smartContractRisk) / 100,
+          });
+        }
       }
 
       setIsLive(true);
@@ -305,8 +337,11 @@ export function usePublicContractData() {
 
   return {
     agentCount, totalDecisions, totalThreats, totalProtections,
-    totalDeposited, totalValueProtected, agentName, agentTier, agentReputation,
-    recentDecisions, loaded, isLive, fetchPublicData,
+    totalDeposited, totalValueProtected, totalActionsExecuted,
+    agentName, agentTier, agentOperator,
+    agentTotalDecisions, agentSuccessfulActions, agentTotalValueProtected, agentRegisteredAt,
+    agentReputation, agentSuccessRate,
+    recentDecisions, publicRiskSnapshot, loaded, isLive, fetchPublicData,
   };
 }
 
